@@ -8,6 +8,11 @@ Each course has its own page with in-depth explanations about notes and assignme
 - Data Science & Society
 - Data Analysis and Visualization
 - Advanced Research Methods
+- Business Intelligence
+- Machine Learning for Human Vision and Language
+- Mobile Interaction
+- ICT Advisory
+- (Seminar) Medical Informatics
 
 ### Secondary courses
 - Introduction to MBI
@@ -27,6 +32,20 @@ Each course has its own page with in-depth explanations about notes and assignme
   - [First assignment] (courses/data-mining/assignment/first)
   - [Second assignment] (courses/data-mining/assignment/second)
   - [Material] (courses/data-mining/assignment/second)
+  
+- [Data Analysis and Visualization](courses/) quick links
+
+- [Advanced Research Methods](courses/) quick links
+
+- [Business Intelligence](courses/) quick links
+
+- [Machine Learning for Human Vision and Language](courses/) quick links
+
+- [Mobile Interaction](courses/) quick links
+
+- [ICT Advisory](courses/) quick links
+
+- [(Seminar) Medical Informatics](courses/) quick links
 
 ### Secondary courses
 - Introduction to MBI
@@ -38,7 +57,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Authors
 
-* **Leonardo Vida** - *Initial work* - [Website](https://www.leonardovida.com)
+* **Leonardo Vida** - [Website](https://www.leonardovida.com)
 
 ## License
 
