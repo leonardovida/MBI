@@ -1,0 +1,34 @@
+"0","houses <- read_csv(""data/train.csv"") %>% 
+  as_tibble() %>% 
+  select(c(MSSubClass, MSZoning, LotShape, Neighborhood, OverallQual,
+           OverallCond, YearBuilt, MoSold, YrSold, SalePrice, GrLivArea)) %>% 
+  filter(!is.na(SalePrice))
+"
+"2","Parsed with column specification:
+cols(
+  .default = col_character(),
+  Id = col_integer(),
+  MSSubClass = col_integer(),
+  LotFrontage = col_integer(),
+  LotArea = col_integer(),
+  OverallQual = col_integer(),
+  OverallCond = col_integer(),
+  YearBuilt = col_integer(),
+  YearRemodAdd = col_integer(),
+  MasVnrArea = col_integer(),
+  BsmtFinSF1 = col_integer(),
+  BsmtFinSF2 = col_integer(),
+  BsmtUnfSF = col_integer(),
+  TotalBsmtSF = col_integer(),
+  `1stFlrSF` = col_integer(),
+  `2ndFlrSF` = col_integer(),
+  LowQualFinSF = col_integer(),
+  GrLivArea = col_integer(),
+  BsmtFullBath = col_integer(),
+  BsmtHalfBath = col_integer(),
+  FullBath = col_integer()
+  # ... with 18 more columns
+)
+"
+"2","See spec(...) for full column specifications.
+"

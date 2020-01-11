@@ -1,0 +1,2 @@
+"0","students <- read_xlsx(""02_Data_manipulation/data/students.xlsx"")"
+"0","tail(students)"

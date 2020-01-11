@@ -1,0 +1,36 @@
+---
+title: "Notes Data Analysis and Visualization - ISL"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    fig_width: 5
+    fig_height: 4
+  pdf_document: default
+---
+# Notes Data Analysis and Visualization - ISL
+
+## Chapter 1 - Introduction
+
+### Overview of Statistical Learning 
+
+Statistical learning refers to a tools for understanding data. It can be supervised or unsupervised. 
+* Supervised learning involves building a statistical model for predicting an output based on inputs
+* Unsupervised learning has inputs but not supervising outputs --> we can still learn relationships and structures from such data
+
+ISL will use the Wage dataset.
+
+The Wage dataset involves predicting a continuous or quantitative output value: this is a **regression problem**
+In other cases one may want to predict a categorical value (non quantitative), in this case we would have a classification problem
+
+### History of Statistical Learning
+
+LEgendre and Gauss published papers on the methods of least squares at the beginning of the 1900's which implemented the linear regression method. Successively, linear discriminant analysis was proposed by Fisher. Logisitic regression was introduced in the 1940s while in the 1970's Nelder and Wedderburn coined the term generalized linear models. By the 1980's non-linear methods became available and Breiman, Friedman, Oshen and Stone introduced *classification and regression trees*. In 1986m Tubshirani introudced the generalized additive models and machine learning arrived.
+
+## Chapter 2 - Statistical Learning
+
+### What is it
+
+We have a quantitative respose Y and p different predictors

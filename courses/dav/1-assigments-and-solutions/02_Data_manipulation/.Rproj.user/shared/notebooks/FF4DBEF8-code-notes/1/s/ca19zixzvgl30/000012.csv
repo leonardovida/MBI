@@ -1,0 +1,28 @@
+"0","# Or to write it fully
+read_csv(""02_Data_manipulation/data/googleplaystore.csv"") %>% 
+  filter(Category %in% c(""GAME"",""COMMUNICATION"")) %>% 
+  select(App, Category, Rating) %>% 
+  distinct(App, .keep_all = TRUE) %>% 
+  group_by(Category) %>% 
+  summarise(
+    mean = mean(Rating, na.rm = TRUE),
+    median = median(Rating, na.rm = TRUE)
+  )
+"
+"2","Parsed with column specification:
+cols(
+  App = col_character(),
+  Category = col_character(),
+  Rating = col_double(),
+  Reviews = col_integer(),
+  Size = col_character(),
+  Installs = col_character(),
+  Type = col_character(),
+  Price = col_character(),
+  `Content Rating` = col_character(),
+  Genres = col_character(),
+  `Last Updated` = col_character(),
+  `Current Ver` = col_character(),
+  `Android Ver` = col_character()
+)
+"

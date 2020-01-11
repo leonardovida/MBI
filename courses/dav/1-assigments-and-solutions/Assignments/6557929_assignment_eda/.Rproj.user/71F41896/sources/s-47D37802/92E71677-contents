@@ -1,0 +1,440 @@
+---
+title: "R Code Note"
+output: html_notebook
+---
+
+## Exercise 2
+This file takes all the code used in the previous exercises.
+
+Load packages.
+Todo: understand what these configuration codes mean.
+```{r load_packages, message = FALSE, warning = FALSE}
+library(ISLR)
+library(tidyverse)
+library(haven)
+library(readxl)
+```
+
+### Most common data types used in R
+There are several data types in `R`. Here is a table with the most common ones:
+
+| Type             | Short | Example                |
+| :--------------- | :---- | :--------------------- |
+| Integer          | int   | 0, 1, 2, 3, -4, -5     |
+| Numeric / Double | dbl   | 0.1, -2.5, 123.456     |
+| Character        | chr   | "dav is a cool course" |
+| Logical          | lgl   | TRUE / FALSE           |
+| Factor           | fctr  | low, medium, high      |
+
+The `class()` function can give you an idea about what type of data each variable contains. One can also use `typeof()`
+We can convert to different data types using the `as.<class>()` functions. 
+
+You can select elements of a list using its name (`objects$elementname`) or using its index (`objects[[1]]` for the first element).
+
+### Data Frame
+A special type of list is the `data.frame`. It is the same as a list, but each element is forced to have the same length and a name. The elements of a `data.frame` are the columns of a dataset. In the tidyverse, `data.frame`s are called `tibble`s.
+
+Just like a list, the columns in a data frame (the variables in a dataset) can be accessed using their name `df$columnname` or their index `df[[1]]`. Additionally, the tenth row can be selected using `df[10, ]`, the second column using `df[, 2]` and cell number 10, 2 can be accessed using `df[10, 2]`. This is because data frames also behave like the `matrix` data type in addition to the `list` type.
+
+Todo: learn better tidyverse
+
+### Load files
+Tidyverse contains many data loading functions -- each for their own file type -- in the packages `readr` (default file types), `readxl` (excel files), and `haven` (external file types such as from SPSS or Stata). The most common file type is `csv`, which is what we use here.
+
+```{r}
+students <- read_xlsx("02_Data_manipulation/data/students.xlsx")
+tail(students)
+head(students)
+```
+
+```{r}
+summary(students)
+# the range of grades is 4.844-9.291
+```
+
+### Data transformation with `dplyr` verbs
+The tidyverse package `dplyr` contains functions to transform, rearrange, and filter data frames. 
+
+```{r}
+#df_students <- data.frame(students)
+# Show students with grade lower than 5.5
+grade.less.five <- filter(students, grade < 5.5)
+
+#Shows only the students with a grade higher than 8 from A
+grade.higher.eight.a <- filter(students, grade > 8, programme == "A")
+```
+
+Arrange() verb, sotrt a data fram by one or more columns.
+Using `-grades` is equal as using `desc(grades)`.
+```{r}
+#Sort students on top of the data and with highest grade
+sorted.a <- arrange(students, programme, desc(grade))
+```
+
+Select() verb selects columns of interest.
+```{r}
+#Show the sutdet_number and programme columns
+selected.two <- select(students, student_number, programme)
+```
+
+Mutate() is used to create new columsn or transforming existing ones as function of other columns in the dataset.
+Recode() function is used to change the code in the programme column of the students dataset to their names
+```{r}
+students <- mutate(students, pass = grade > 5.5)
+students_recoded <- mutate(students, programme = recode(programme,"A" = "Science", "B" = "Social Sciences"))
+```
+
+A very useful feature in tidyverse is the pipe %>%. The pipe inputs the result from the left-hand side as the first argument of the right-hand side function: filter(students, grade > 5.5) becomes students %>% filter(grade > 5.5). 
+With the pipe, a set of processing steps becomes a neatly legible data processing pipeline!
+Tip: ctrl/cmd + shift + M inserts a pipe operator in RStudio.
+```{r}
+# The task we just did can therefore be piped in the following way
+students_dataset <-
+  read_xlsx("02_Data_manipulation/data/students.xlsx") %>%
+  mutate(prog = recode(programme, "A" = "Science", "B" = "Social Science")) %>% filter(grade > 5.5) %>%
+  arrange(programme, -grade) %>%
+  select(student_number, prog, grade)
+  students_dataset
+```
+
+Other example
+```{r}
+popular.apps <- 
+  read.csv("02_Data_manipulation/data/googleplaystore.csv") %>%
+  mutate(Downloads = parse_number(Installs, "+")) %>%
+  filter(Downloads > 500000000) %>%
+  arrange(Rating) %>%
+  select(Rating, Category, Installs) %>%
+  distinct(App, .keep_all = TRUE)
+```
+
+### Grouping and summarisation
+```{r}
+students_dataset %>% 
+  summarise(
+    mean = mean(grade), variance = var(grade), min = min(grade),
+    max = max(grade)
+  )
+
+popular.apps %>% 
+  summarise(
+    median = median(Rating), variance = var(Rating),
+    min = min(Rating), max = max(Rating),
+    mad = mad(Rating)
+  )
+```
+
+The summarise() function works with any function that takes a vector of numbers and outputs a single number. For example, we can create our own Median Absolute Deviation (MAD) function:
+```{r}
+mad <- function(x) {
+  median(abs(x - median(x)))
+}
+
+students_dataset %>% summarise(mad = mad(grade))
+```
+
+Create a grouped summary of the ratings per category
+```{r}
+popular.apps %>% 
+  group_by(Category) %>% 
+  summarise(
+    median = median(Rating),
+    variance = var(Rating),
+    min = min(Rating),
+    max = max(Rating),
+    mad = mad(Rating)
+  )
+```
+
+Do games get higher ratings than communication apps?
+```{r}
+popular.apps %>% 
+  group_by(Category) %>% 
+  summarise(
+    median = median(Rating),
+    variance = var(Rating),
+    min = min(Rating),
+    max = max(Rating),
+    mad = mad(Rating)
+  )
+
+# Or to write it fully
+read_csv("02_Data_manipulation/data/googleplaystore.csv") %>% 
+  # the filter can also be written as 
+  # filter(Category == "GAME" | Category == "COMMUNICATION")
+  filter(Category %in% c("GAME","COMMUNICATION")) %>% 
+  select(App, Category, Rating) %>% 
+  distinct(App, .keep_all = TRUE) %>% 
+  group_by(Category) %>% 
+  summarise(
+    mean = mean(Rating, na.rm = TRUE),
+    median = median(Rating, na.rm = TRUE)
+  )
+```
+
+## Notes Exercise 3
+
+```{r}
+library(ISLR)
+library(tidyverse)
+```
+Get an idea of the dataset
+```{r}
+head(Hitters)
+```
+
+```{r}
+ggplot(Hitters) +
+  geom_point( 
+    aes(x = Hits, y = Runs, color = Salary))
+```
+Create histogram of the distirbution of the salary
+```{r}
+hist(Hitters$Salary, xlab = "Salary")
+barplot(table(Hitters$League))
+plot(x = Hitters$Hits, y = Hitters$HmRun,
+     xlab = "Hits", ylab = "homerun")
+```
+Begin to plot with ggplot
+```{r}
+homeruns.plot <- 
+  ggplot(Hitters, aes(x = Hits, y = HmRun)) +
+  geom_point() +
+  labs(x = "hits", y = "home runs")
+homeruns.plot
+```
+One can easily add things to ggplot
+```{r}
+homeruns.plot + 
+  geom_density_2d() +
+  facet_wrap(~ League, nrow = 3) +
+  labs(title = "Desity plot") +
+  theme_minimal()
+```
+
+---
+
+1. __Name the aesthetics, geoms, scales, and facets of the above visualisation. Also name any statistical transformations or special coordinate systems.__
+
+---
+
+**Answer**
+```{r question}
+# Aesthetics: 
+#   number of hits mapped to x-position
+#   number of home runs mapped to y-position
+# Geoms: points and contour lines
+# Scales:
+#   x-axis: continuous
+#   y-axis: continuous
+# Facets: None
+# Statistical transformations: None
+# Special coordinate system: None (just cartesian)
+```
+
+---
+
+2. __Run the code below to generate data. There will be three vectors in your environment. Put them in a data frame for entering it in a ggplot() call using either the data.frame() or the tibble() function. Give informative names and make sure the types are correct (use the as.<type>() functions). Name the result gg_students__
+---
+
+**Answer**
+```{r}
+set.seed(1234)
+
+student_grade <- rnorm(32, 7)
+student_number <- round(runif(32) * 2e6 + 5e6)
+programme <- sample(c("Science", "Social Science"), 32, replace = TRUE)
+
+gg_students <- tibble(
+  grade = as.numeric(student_grade),
+  number = as.numeric(student_number),
+  programme = as.character(programme)
+)
+```
+---
+
+3. __Plot the first homeruns_plot again, but map the Hits to the y-axis and the HmRun to the x-axis instead.__
+---
+
+**Answer**
+```{r}
+homeruns.hits <- ggplot(Hitters, aes(x = HmRun, y = Hits)) +
+  geom_point() + 
+  labs(x = "Home runs", y = "Hits")
+```
+
+---
+4. __Recreate the same plot once more, but now also map the variable League to the colour aesthetic and the variable Salary to the size aesthetic.__
+---
+
+**Answer**
+```{r}
+homeruns.hits +
+  geom_point(aes(color = League, size = Salary))
+```
+
+Other examples of aesthetics (aes) are:
+- x
+- y
+- alpha (transparency) • colour
+- fill
+- group
+- shape
+- size
+- stroke
+
+### Geoms
+
+**Histogram**
+---
+5. __Use geom_histogram() to create a histogram of the grades of the students in the gg_students dataset. Play around with the binwidth argument of the geom_histogram() function..__
+---
+```{r}
+base.plot <- gg_students %>%ggplot(aes(x=grade))
+
+base.plot +
+  geom_histogram(binwidth = 0.2)
+```
+
+**Density**
+---
+7. __Use geom_density() to create a density plot of the grades of the students in the gg_students dataset. Add the argument fill = "light seagreen" to geom_density().__
+---
+```{r}
+base.plot +
+  geom_density(fill = 'light seagreen')
+```
+This represents a data abstraction and it might alter interpretations. To counter this we can add raw data display in the form of **rug marks**
+
+---
+8. __Add rug marks to the density plot through geom_rug(). You can edit the colour and size of the rug marks using those arguments within the geom_rug() function.__
+---
+```{r}
+base.plot +
+  geom_density(fill = 'light seagreen')
+  geom_rug(size = 1, colour = "light seagreen")
+```
+
+---
+9. __Increase the data to ink ratio by removing the y axis label, setting the theme to theme_minimal(), and removing the border of the density polygon. Also set the limits of the x-axis to go from 0
+to 10 using the xlim() function, because those are the plausible values for a student grade.__
+---
+```{r}
+gg_students %>%
+  ggplot(aes(x = grade)) +
+  geom_density(fill = 'light seagreen', colour = NA) +
+  geom_rug(size = 1, colour = "light seagreen") +
+  theme_minimal() +
+  labs(y = "", x = "Grades") +
+  xlim(0,10)
+```
+
+---
+10. __Create a boxplot of student grades per programme in the gg_students dataset you made earlier: map the programme variable to the x position and the grade to the y position. For extra visual aid, you can additionally map the programme variable to the fill aesthetic.__
+---
+```{r}
+gg_students %>% 
+  ggplot(aes(x= programme, y = grade, fill = programme)) +
+  geom_boxplot() +
+  theme_minimal()
+```
+The horizonal lines are, respectively, the 3rd quartile, the median and the 1nd quartile. The whiskers corresponds to the minimum and maximum values of data excluding the "outliers". Every datapoint which is less than 1.5IQR of difference
+
+---
+12. __Create a boxplot of student grades per programme in the gg_students dataset you made earlier: map the programme variable to the x position and the grade to the y position. For extra visual aid, you can additionally map the programme variable to the fill aesthetic.__
+---
+```{r}
+gg_students %>% 
+  ggplot(aes(x = grade, fill = programme)) +
+  geom_density(alpha = .5, colour = NA) +
+  geom_rug(size = 1, colour = "light seagreen") +
+  theme_minimal() +
+  labs(y = "", fill = "Programme") +
+  xlim(0, 10)
+```
+
+**Bar plot**
+```{r}
+Hitters %>% 
+  ggplot(aes(x = Years)) +
+  geom_bar() +
+  theme_minimal()
+```
+
+**Line plot**
+```{r}
+max.market <- Smarket[1:200,] %>% 
+  as_tibble() %>% 
+  mutate(Day = 1:200) %>%
+  ggplot(aes(x = Day, y = Volume)) +
+  geom_line(colour = 'red', size = 1) +
+  geom_smooth(method = lm, formula = y ~ poly(x, 20), se = FALSE, colour = 'black') +
+  theme_minimal()
+
+```
+
+Find which day the highest trade was carried out in and how large was the volume of this trade
+```{r}
+which.max(Smarket[1:200,]$Volume)
+max(Smarket[1:200,]$Volume)
+```
+
+---
+17. __Use geom_label(aes(x=your_x,y=your_y,label="Peakvolume")) to add a label to this day. You can use either the values or call the functions. Place the label near the peak!.__
+---
+```{r}
+max.market +
+  geom_label(aes(x=170,y=2.33083,label="Peakvolume")) +
+```
+
+**Faceting**
+---
+18. __Create a data frame called baseball based on the Hitters dataset. In this data frame, create a factor variable which splits players’ salary range into 3 categories. Tip: use the filter() function to remove the missing values, and then use the cut() function and assign nice labels to the categories. In addition, create a variable which indicates the proportion of career hits that was a home run.__
+---
+```{r}
+baseball <- 
+  Hitters %>%
+  filter(!is.na(Salary)) %>% 
+  mutate(
+    Salary_range = cut(Salary, breaks = 10),
+    chp = CHmRun/CHits)
+
+baseball %>%
+  ggplot(aes(x = CWalks, y = chp)) +
+  geom_point() +
+  ylim(0,0.4) +
+  xlim(0,1600) +
+  labs(x = "Walks", y = "Chp") +
+  geom_smooth(method = lm, formula = y ~ poly(x, 3), se = FALSE) +
+  facet_wrap(vars(Salary_range))
+```
+
+```{r}
+CWalks 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

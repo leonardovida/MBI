@@ -1,0 +1,204 @@
+---
+title: "Assignment Exploratory Data Analysis"
+output:
+  pdf_document: default
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    fig_width: 5
+    fig_height: 4
+---
+# Assignment 1
+Leonardo Vida
+ID: 6557929
+
+## Dataset
+### General information
+The dataset used in this assignment is the training set of the ["House Prices"](https://www.kaggle.com/c/house-prices-advanced-regression-techniques) dataset provided by Kaggle, a dataset containing many of the most relevant characteristics of houses sold between 2006 and 2010 in Ames, Iowa. The dataset comes with a file providing the full description of each column: "*data_description.txt*". Both the dataset and the description files are located in the *data* folder, as requested by the assignment. The dataset is meant to be used in a competition on Kaggle to predict the final prices of future houses sold in the same city in Iowa.
+
+As visible below, the description of each column is used to select only the most relevant features of the dataset; once selected, an Exploratory Data Analysis will be conducted.
+
+```{r include=FALSE}
+# Set global options for knitr to format the notebook's output
+knitr::opts_chunk$set(
+  echo = TRUE, cache = TRUE, fig.keep = 'last',
+  fig.align = 'center', message = FALSE,
+  warning = FALSE
+)
+```
+
+
+### Dataset description
+```{r echo=TRUE, results='hide', error=FALSE}
+#Import statements
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(moments)
+```
+The file is read into a tibble, a tweaked version of a data frame created for the tidyverse. Of the tibble `houses` only the most relevant columns for the exploratory analysis are selected. In this regards, only quantitative variables will be selected, to reduce the need of recoding variables into numerical factors.
+```{r results='hide'}
+houses <- read_csv("data/train.csv") %>% 
+  as_tibble() %>% 
+  select(c(MSSubClass, MSZoning, LotShape, Neighborhood, OverallQual,
+           OverallCond, YearBuilt, MoSold, YrSold, SalePrice, GrLivArea)) %>% 
+  filter(!is.na(SalePrice))
+```
+Summaries the main statistics metrics (minimum, maximum, median, mean and quartiles) the relevant numeric variables.
+```{r echo=FALSE}
+table.summaries <- houses %>% 
+  select(c(MSSubClass, OverallQual, OverallCond, YearBuilt,
+           MoSold, YrSold, SalePrice, YearBuilt, GrLivArea)) %>% 
+  summary()
+
+print(table.summaries)
+```
+ 
+***
+ 
+## Exploratory Analysis
+### SalePrice variable
+The variable `SalePrice` is used as a response variable to train the prediction models for the Kaggle competition. Although this assignment will not enter in the prediction territory, it is of interest, and central part of the assignment, to plot some of the most important variables of the dataset.
+```{r}
+plot.sale.prices <- ggplot(houses, aes(x = SalePrice)) +
+  geom_histogram(fill = 'dark blue', binwidth = 10000) +
+  labs(x = "Sale price in $",
+       y = "Counts",
+       title = "Final sales prices") +
+  scale_x_continuous(breaks = seq(0, 800000, by = 50000)) + 
+  scale_y_continuous(breaks = seq(0, 200, by = 25)) +
+  geom_label(aes(x = median(houses$SalePrice),y = 110, label="Median $163k")) +
+  geom_label(aes(x = mean(houses$SalePrice),y = 100, label="Mean $181k")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+plot.sale.prices
+
+skewness.price <- skewness(houses$SalePrice)
+kurtosis.price <- kurtosis(houses$SalePrice)
+cat("Skewness of SalePrice variable: ", skewness.price)
+cat("Kurtosis of SalePrice variable: ", kurtosis.price)
+```
+The variable is positively (rightly) skewed with a skewness of 1.88. Sale Price is also not normally distributed, given a kurtosis value of 9.51, significantly higher than the expected value of a normal distribution of 3.
+
+### Sale prices and overall quality
+Using boxplots we can measure the correlation between sale prices and overall quality of the house. In red are indicated the outliers.
+The majority of outliers are visible at quality levels 5-8 as those level represent the average quality levels of the houses in the dataset and therefore contain more observations.
+```{r}
+ggplot(houses, aes(x = factor(OverallQual), y = SalePrice)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 1) +
+  labs(y = "Sale price in $",
+       x = "Quality of the house",
+       title = "Sale price per quality level") +
+  scale_y_continuous(breaks = seq(0, 800000, by = 75000))
+```
+
+### Median sale price per month
+Observing the figure below it is visible that the median price of houses peaks three times during the year: in February, September and December. In the white rectangular and squared boxes are represented the count of houses sold per month of the year.
+```{r}
+houses %>%
+  ggplot(aes(x = MoSold, y = SalePrice)) +
+  geom_bar(stat='summary',
+           fun.y = 'median',
+           fill='dark blue') + #median sale price
+  scale_y_continuous(breaks= seq(0, 200000, by=25000)) +
+  scale_x_continuous(breaks= seq(0, 12, by=1)) +
+  labs(y = "Sale price in $",
+       x = "Month of sale",
+       title = "Sale price per month") +
+  geom_label(stat = 'count', aes(label = ..count.., y = ..count..))
+```
+
+### Median sale price per neighborhood
+There are three neighbourhoods (NoRidge, NridgHt and StoneBr) with a median sale price above 275,000 dollars. The overall median (red horizontal line) is 163,000 dollars. In the white rectangular and squared boxes are represented the count of houses sold in each neighborhood.
+```{r}
+houses %>%
+  ggplot(aes (x = Neighborhood, y = SalePrice)) +
+  geom_bar(stat='summary', fun.y = 'median', fill='dark blue') +
+  geom_label(stat = 'count', aes(label = ..count.., y = ..count..)) +
+  scale_y_continuous(breaks= seq(0, 800000, by=50000)) +
+  labs(y = "Sale price in $",
+       x = "Neighborhood",
+       title = "Sale price per neighborhood") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_hline(aes(yintercept = median(SalePrice)), colour="red")
+```
+
+### Sale price per year of construction
+In red is indicated the median sale price per year, as it is clearly visible in the figure below the sale price increases the newer the houses. This is in line with the expected results, as newer houses will need less overhead investment to renew/remodel them.
+```{r}
+# Find median Sale price for each year
+median.price.year <- houses %>%
+  group_by(YearBuilt) %>% 
+  summarise(median.Price = median(SalePrice))
+
+ggplot(NULL, aes(x, y)) +
+  geom_point(data = houses,
+             aes(x = SalePrice, y = YearBuilt),
+             colour = "dark blue") +
+  geom_line(data = median.price.year, aes(x = median.price.year$median.Price),
+            y = median.price.year$YearBuilt, colour = 'red', size = 1) +
+  scale_y_continuous(breaks= seq(1800, 2015, by=20)) +
+  scale_x_continuous(breaks= seq(0, 800000, by=50000)) +
+  labs(x = "Sale price in $",
+       y = "Year of construction",
+       title = "Sale price per Year of construction") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Sale prices and living area
+The scatter plot clearly shows a good positive linear relatioship between the price and the size of the living area of the house (measured in squared feet). As we will see in the next figure, the relatioship begins to break down the more the size of the house increases.
+```{r}
+houses %>% 
+  ggplot(aes(x = GrLivArea, y = SalePrice)) +
+  geom_point(colour = "dark blue") +
+  scale_y_continuous(breaks= seq(0, 800000, by=50000)) +
+  scale_x_continuous(breaks= seq(0, 100000, by=500)) +
+  labs(x = "Living area",
+       y = "Sale Price in $",
+       title = "Sale price on living area") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### Sales price and living area per house category
+After recoding the categories in order to create a more clear picture of the relationship, it is possible to observe that the positive linear relationship observed above between sale price and living area still holds in most of the classes of houses. However, it is not as clear for 3 classes. Possible motivations are briefly expressed in the next section "*Evaluation of results*". 
+```{r}
+# Recode from numbers to string categories as defined in data_description
+str(houses$MSSubClass)
+
+houses$MSSubClass <- as.factor(houses$MSSubClass)
+
+houses$MSSubClass <- recode(houses$MSSubClass,
+                            '20'='1 story 1946+', '30'='1 story 1945-',
+                            '40'='1 story fin w/ attic', '45'='1,5 story unf',
+                            '50'='1,5 story fin', '60'='2 story 1946+', '70'='2 story 1945-',
+                            '75'='2,5 story all ages', '80'='Split or multi level',
+                            '85'='Split foyer', '90'='Suplex all style and age',
+                            '120'='1 story PUD 1946+', '150'='1,5 story PUD all', '160'='2 story PUD 1946+',
+                            '180'='PUD multilevel', '190'='2 family conversion')
+str(houses$MSSubClass)
+
+houses %>%
+  ggplot(aes(y = SalePrice, x = GrLivArea)) +
+  geom_point(size = 0.2, colour = "dark blue") +
+  facet_wrap(~ MSSubClass) +
+  scale_y_continuous(breaks= seq(0, 800000, by=175000)) +
+  scale_x_continuous(breaks= seq(0, 100000, by=750)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Living area",
+       y = "Sale Price in $",
+       title = "Sale price on living area per class of house")
+```
+
+***
+
+## Evaluation of results
+The dataset is overall very clean, therefore it is very appropriate for an exploratory data analysis. The distribution of the main dependent variable, Sale Price, is not normally distributed. However, as the next paragraph will highlight, house prices are expected to follow a similar behavior, in particular when such houses begin to correspond to the category of luxury goods. A possible interesting further research could categorise and compare the demand of luxury homes to the demand of veblen goods, in order to search for a cut-off value above which to classify "expensive" luxury houses as "*Veblen homes*"; this is however out of the scope of the assignemnt. 
+
+As already noted in the graph descriptions, the dependent variable "Sale Price" presents few outliers that mainly affect expensive or "*Good quality*" houses ($600,000+, or 6+ Quality). The increased presence of outliers for very expensive houses could be determined by the breakdown of the relationship between living area and price per square feet determined by factors which are outside the scope of this exploratory analysis, such as: the type of remodeling of the house, the notoriety of the neighborhood or the presence of "luxury" components (such as pools or elevators).
+
+The graph "Sale price on living area per class of house" depicts linearly increasing relationship between living area and sale price for almost all classes of houses. Notable exceptions is the "2 family conversion", "duplex all style and age" and "split foyer" classes, whose prices seem not to be affected by the living area variable. However, we must point out that further exploration should be conducted before taking any conclusion.

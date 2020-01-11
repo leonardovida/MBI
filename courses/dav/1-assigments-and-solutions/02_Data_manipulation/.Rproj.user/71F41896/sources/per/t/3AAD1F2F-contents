@@ -1,0 +1,184 @@
+---
+title: "R Code Note"
+output: html_notebook
+---
+
+## Exercise 2
+This file takes all the code used in the previous exercises.
+
+Load packages.
+Todo: understand what these configuration codes mean.
+```{r load_packages, message = FALSE, warning = FALSE}
+library(ISLR)
+library(tidyverse)
+library(haven)
+library(readxl)
+```
+
+### Most common data types used in R
+There are several data types in `R`. Here is a table with the most common ones:
+
+| Type             | Short | Example                |
+| :--------------- | :---- | :--------------------- |
+| Integer          | int   | 0, 1, 2, 3, -4, -5     |
+| Numeric / Double | dbl   | 0.1, -2.5, 123.456     |
+| Character        | chr   | "dav is a cool course" |
+| Logical          | lgl   | TRUE / FALSE           |
+| Factor           | fctr  | low, medium, high      |
+
+The `class()` function can give you an idea about what type of data each variable contains. One can also use `typeof()`
+We can convert to different data types using the `as.<class>()` functions. 
+
+You can select elements of a list using its name (`objects$elementname`) or using its index (`objects[[1]]` for the first element).
+
+### Data Frame
+A special type of list is the `data.frame`. It is the same as a list, but each element is forced to have the same length and a name. The elements of a `data.frame` are the columns of a dataset. In the tidyverse, `data.frame`s are called `tibble`s.
+
+Just like a list, the columns in a data frame (the variables in a dataset) can be accessed using their name `df$columnname` or their index `df[[1]]`. Additionally, the tenth row can be selected using `df[10, ]`, the second column using `df[, 2]` and cell number 10, 2 can be accessed using `df[10, 2]`. This is because data frames also behave like the `matrix` data type in addition to the `list` type.
+
+Todo: learn better tidyverse
+
+### Load files
+Tidyverse contains many data loading functions -- each for their own file type -- in the packages `readr` (default file types), `readxl` (excel files), and `haven` (external file types such as from SPSS or Stata). The most common file type is `csv`, which is what we use here.
+
+```{r}
+students <- read_xlsx("02_Data_manipulation/data/students.xlsx")
+tail(students)
+head(students)
+```
+
+```{r}
+summary(students)
+# the range of grades is 4.844-9.291
+```
+
+### Data transformation with `dplyr` verbs
+The tidyverse package `dplyr` contains functions to transform, rearrange, and filter data frames. 
+
+```{r}
+#df_students <- data.frame(students)
+# Show students with grade lower than 5.5
+grade.less.five <- filter(students, grade < 5.5)
+
+#Shows only the students with a grade higher than 8 from A
+grade.higher.eight.a <- filter(students, grade > 8, programme == "A")
+```
+
+Arrange() verb, sotrt a data fram by one or more columns.
+Using `-grades` is equal as using `desc(grades)`.
+```{r}
+#Sort students on top of the data and with highest grade
+sorted.a <- arrange(students, programme, desc(grade))
+```
+
+Select() verb selects columns of interest.
+```{r}
+#Show the sutdet_number and programme columns
+selected.two <- select(students, student_number, programme)
+```
+
+Mutate() is used to create new columsn or transforming existing ones as function of other columns in the dataset.
+Recode() function is used to change the code in the programme column of the students dataset to their names
+```{r}
+students <- mutate(students, pass = grade > 5.5)
+students_recoded <- mutate(students, programme = recode(programme,"A" = "Science", "B" = "Social Sciences"))
+```
+
+A very useful feature in tidyverse is the pipe %>%. The pipe inputs the result from the left-hand side as the first argument of the right-hand side function: filter(students, grade > 5.5) becomes students %>% filter(grade > 5.5). 
+With the pipe, a set of processing steps becomes a neatly legible data processing pipeline!
+Tip: ctrl/cmd + shift + M inserts a pipe operator in RStudio.
+```{r}
+# The task we just did can therefore be piped in the following way
+students_dataset <-
+  read_xlsx("02_Data_manipulation/data/students.xlsx") %>%
+  mutate(prog = recode(programme, "A" = "Science", "B" = "Social Science")) %>% filter(grade > 5.5) %>%
+  arrange(programme, -grade) %>%
+  select(student_number, prog, grade)
+  students_dataset
+```
+
+Other example
+```{r}
+popular.apps <- 
+  read.csv("02_Data_manipulation/data/googleplaystore.csv") %>%
+  mutate(Downloads = parse_number(Installs, "+")) %>%
+  filter(Downloads > 500000000) %>%
+  arrange(Rating) %>%
+  select(Rating, Category, Installs) %>%
+  distinct(App, .keep_all = TRUE)
+```
+
+### Grouping and summarisation
+```{r}
+students_dataset %>% 
+  summarise(
+    mean = mean(grade), variance = var(grade), min = min(grade),
+    max = max(grade)
+  )
+
+popular.apps %>% 
+  summarise(
+    median = median(Rating), variance = var(Rating),
+    min = min(Rating), max = max(Rating),
+    mad = mad(Rating)
+  )
+```
+
+The summarise() function works with any function that takes a vector of numbers and outputs a single number. For example, we can create our own Median Absolute Deviation (MAD) function:
+```{r}
+mad <- function(x) {
+  median(abs(x - median(x)))
+}
+
+students_dataset %>% summarise(mad = mad(grade))
+```
+
+Create a grouped summary of the ratings per category
+```{r}
+popular.apps %>% 
+  group_by(Category) %>% 
+  summarise(
+    median = median(Rating),
+    variance = var(Rating),
+    min = min(Rating),
+    max = max(Rating),
+    mad = mad(Rating)
+  )
+```
+
+Do games get higher ratings than communication apps?
+```{r}
+popular.apps %>% 
+  group_by(Category) %>% 
+  summarise(
+    median = median(Rating),
+    variance = var(Rating),
+    min = min(Rating),
+    max = max(Rating),
+    mad = mad(Rating)
+  )
+
+# Or to write it fully
+read_csv("02_Data_manipulation/data/googleplaystore.csv") %>% 
+  # the filter can also be written as 
+  # filter(Category == "GAME" | Category == "COMMUNICATION")
+  filter(Category %in% c("GAME","COMMUNICATION")) %>% 
+  select(App, Category, Rating) %>% 
+  distinct(App, .keep_all = TRUE) %>% 
+  group_by(Category) %>% 
+  summarise(
+    mean = mean(Rating, na.rm = TRUE),
+    median = median(Rating, na.rm = TRUE)
+  )
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1541983091919.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4270280817",
+    "id" : "844D0B05",
+    "lastKnownWriteTime" : 1542028926,
+    "last_content_update" : 1542382715192,
+    "path" : "~/Desktop/Utrecht University/5. Data Analysis and Visualization/2. Assignments material/01_R_basics_for_DAV/r_basics.Rmd",
+    "project_path" : "r_basics.Rmd",
+    "properties" : {
+        "cursorPosition" : "239,185",
+        "scrollLine" : "227"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

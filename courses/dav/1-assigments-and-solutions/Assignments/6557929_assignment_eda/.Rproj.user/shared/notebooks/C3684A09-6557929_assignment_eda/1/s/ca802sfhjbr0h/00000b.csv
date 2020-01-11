@@ -1,0 +1,4 @@
+"0","ggplot(houses, aes(x = factor(OverallQual), y = SalePrice)) +"
+"0","  geom_boxplot(outlier.colour = ""red"", outlier.shape = 1) +"
+"0","  labs(y = ""Sale price in $"", x = ""Quality of the house"") +"
+"0","  scale_y_continuous(breaks = seq(0, 800000, by = 75000))"

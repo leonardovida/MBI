@@ -1,0 +1,19 @@
+"0","apps <- read_csv(""data/googleplaystore.csv"")
+"
+"2","Parsed with column specification:
+cols(
+  App = col_character(),
+  Category = col_character(),
+  Rating = col_double(),
+  Reviews = col_integer(),
+  Size = col_character(),
+  Installs = col_character(),
+  Type = col_character(),
+  Price = col_character(),
+  `Content Rating` = col_character(),
+  Genres = col_character(),
+  `Last Updated` = col_character(),
+  `Current Ver` = col_character(),
+  `Android Ver` = col_character()
+)
+"

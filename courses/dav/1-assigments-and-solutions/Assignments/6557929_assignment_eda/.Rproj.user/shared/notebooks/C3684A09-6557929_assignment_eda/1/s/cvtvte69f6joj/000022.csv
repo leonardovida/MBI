@@ -1,0 +1,7 @@
+"0","houses %>%"
+"0","  ggplot(aes(x = MoSold, y = SalePrice)) +"
+"0","  geom_bar(stat='summary', fun.y = 'median', fill='dark blue') + #median sale price"
+"0","  scale_y_continuous(breaks= seq(0, 200000, by=25000)) +"
+"0","  scale_x_continuous(breaks= seq(0, 12, by=1)) +"
+"0","  labs(y = ""Sale price in $"", x = ""Month of sale"") +"
+"0","  geom_label(stat = 'count', aes(label = ..count.., y = ..count..))"

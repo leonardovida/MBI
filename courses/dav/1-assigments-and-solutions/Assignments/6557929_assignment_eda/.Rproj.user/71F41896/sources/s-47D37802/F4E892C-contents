@@ -1,0 +1,479 @@
+---
+title: "Notes Data Analysis and Visualization"
+output:
+  pdf_document: default
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    fig_width: 5
+    fig_height: 4
+---
+
+## Wickman - Chapter 1
+
+The model that will be used in a typical data science project is on the line of 
+
+> import -> tidy -> (transform - visualize and model) -> communicate
+
+- **Import** taking the file from a web API, dataset, file and import it in R
+- **Tidy** means storing the file in a **consistent** form that matches the semantics of the dataset. Each column a variable and each row and observation
+- **Transform* is narrowing on observations of interest, creating new variables (functions of existing ones) and calculating a set of summary statistics
+	- Tidying + transforming = wrangling
+- **Visualization** shows and raises questions about the data --> *does not scale well!*
+- Models are tools to visualization. Fundamentally are a matehamtcial or computational tool
+
+For big data analysis use data.table --> harder to learn but very useful
+
+Data analysis can be divided into two camps:
+1. Hypothesis generation
+2. Hypothesis confirmation (confirmatory analysis):
+	3. Hard because one needs precise mathematical models to generate falsifiable predictions
+	4. One can only use **an observation once** to cofirm hypothesis. The moment it is used more than once, exploratory analysis is back into place
+
+## Wickman - Chapter 2 - Introduction
+
+![](images/1.png)
+
+## Wickman - Chapter 3 - Data Visualization
+
+ggplot2 implements the gramar of graphics, which is a coherent and cohomprenesive system for descirbing and building graphs.
+
+Load tidyverse after having installed ggplot2 and tidyverse
+```{r fig.keep='none'}
+library(tidyverse)
+```
+
+Display the data frame of mpg - models of cars and their specifics
+```{r fig.keep='none'}
+# To learn more about mpg use '?mpg'
+mpg
+```
+
+Now, plot mpg
+```{r fig.keep='none'}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = cty))
+```
+
+### Graphing template
+Each ggplot() function takes a mapping argument tha defines how variales are mapped to visual properties. The mapping argument is paired with aes(), like this
+
+```
+ggplot(data = <DATA>) + 
+  <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>))
+```
+
+### Exercises
+```{r fig.keep='none'}
+ggplot(data = mpg)
+# Nothing visible beacuse there is not xy axis defined
+nrow(mtcars)
+ncol(mtcars)
+?mpg
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = hwy, y = cyl))
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = class, y = drv))
+# Not useful beacuse you have classes with multiple drvs, does not add information
+```
+
+## Wickman - Chapter 3 - Data Visualization
+Install and use tidyverse and ggplot2, which is one of the core member of the tidyverse
+```{r fig.keep='none'}
+library(tidyverse)
+```
+
+Creating a ggplot
+```{r fig.keep='none'}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+ggplot2 can automatically assign a unique level of the aesthetic to the name of the variable inside aes(); this is scalled scaling. A legend will also be added.
+
+```{r fig.keep='none'}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, size = class))
+# We can mapd class to the alpha aesthetic - which controls the transparency of the points; or even the shape
+
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class))
+```
+### Facets 
+Very easy wat to split the plot into subplots that display one subset of the data. One must use the `facet_wrap()` argument and inside the `~` + `variable name` and the rows/ columns on which you want the facets to be displayes
+```{r fig.keep='none'}
+ggplot(data = mpg) + 
+  # Class in geom_point is not needed.
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class)) +
+  facet_wrap(~ class, nrow = 3)
+
+# One can also facet a combination of more variables
+ggplot(data = mpg) + 
+  # Class in geom_point is not needed.
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class)) +
+  facet_grid(drv ~ cyl)
+
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + facet_grid(drv ~ .)
+```
+
+### Geometric objects
+**Geoms**, in ggplot2 syntax, are different visaul object that are used to represent data. Every geom function takes a **mapping** argument, but not all aesthetic works the same.
+```{r}
+# Here for example geom_smooth accept the linetype modification of the line based on the cars' drv value
+ggplot(data = mpg) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
+```
+To display multiple geoms in the same grid just add multiple geoms to the ggplot function
+```{r fig.keep='none'}
+ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+
+# To reduce duplication one can pass global arguments to ggplot and have them accessible by any geom
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(color = class)) +
+  geom_smooth()
+```
+
+### Exercises
+`se` displays the confidence intervals aroung the geom_smooth lines
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, color = drv)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+### Statistical Transformations
+A statistical transformation, or stat, are used to compute variables in graphs. Generally one can use geoms and stats interchangeably.
+```{r fig.keep='none'}
+ggplot(data = diamonds) + stat_count(mapping = aes(x = cut))
+# Is the same as the graph below
+ggplot(data = diamonds) + geom_bar(mapping = aes(x= cut))
+```
+This is because each geom has a default stat and each stat has a default geom.
+```{r fig.keep='none'}
+ggplot(data = diamonds) + stat_summary(
+  mapping = aes(x = cut, y = depth), fun.ymin = min,
+  fun.ymax = max,
+  fun.y = median
+)
+```
+### Position adjustments
+```{r}
+ggplot(data = diamonds) +
+geom_bar(mapping = aes(x = cut, fill = cut))
+
+# One can also fill the bars with another variable
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, colour = clarity), alpha = 1/5, position = "identity", fill = NA)
+```
+- `position = "identity"` each object will be places where it falls in the context of the graph.
+- `position = "fill"` works like stacking making each set of stacked bars the same height
+- `position = "dodge"` places overlapping objects directly beside one another
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
+```
+
+Often, when visualizing many datapoint, the points appear on a grid but the values are rounded leading the overlap between each point. This is also called overplotting. To avoid this, one can set the position adjustment to `position = "jitter"` to add random noise to each point and dpread them around
+```{r fig.keep='none'}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), position = "jitter")
+```
+```{r}
+ ggplot(data = mpg, mapping = aes(x = cty, y = hwy)) + 
+  geom_point() + 
+  geom_jitter(width = 0.5, height = 0.5)
+```
+### Coordinate systems
+Are the most complext part of ggplot2 and allow to modify x and y to find the loaction of each point. 
+- `coord_flip()` switches the x and y axes 
+- `coord_quickmap()` sets the aspect ratio corretly for maps - for spacial data
+- `coord_polar()` uses polar coorinates -> reveal connection between bar chart and a coxocomb chart
+
+### Other
+- `labs` is used to set axis and legend labels 
+- `coord_fixed()` forces a specified ratio between data units on the axes
+- `geom_abline()` adds reference lines to a plot (vertical, horizontal or diagonal)
+
+### Template for any plot
+```{r error=TRUE}
+ggplot(data = <DATA>) +
+  <GEOM_FUNCTION>(
+     mapping = aes(<MAPPINGS>),
+     stat = <STAT>,
+     position = <POSITION>
+) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION>
+```
+
+## Wickman - Chapter 4 - Workflow: basic
+Basic stuff
+
+Ask question regarding difference between naming of variables in Wickman and the naming of variables following Google Standard
+
+## Wickman - Chapter 5 - Data transformation
+```{r fig.keep='none'}
+library(nycflights13)
+library(tidyverse)
+```
+The `flights` library it's a tibble, dataframe tweaked to work better in the tidyverse.
+In the rows of the tibble one can read numerous different types of variables, the most interesting ones:
+- dttm = date-times
+- lgl = logical (TRUE or FALSE only)
+- fctr = factors, used to represent categorical variables with fixed possible values
+- date = date
+
+### Basic dplyr workflow
+- Pick observation by their values with `filter()`
+- Reorder rows with `arrange()`
+- Pick varialbes by names with `select()`
+- Create new variables with functions of existing variables with `mutate()`
+- Collapse many values down to a single summary with `summarise()`
+All these functions can be used with `group_by()` to change the scope of each function from the entire dataset to only group-by-group
+
+All these verbs take similar inputs:
+1. First argument a dataframe
+2. Second argument descibe what to do with the dataframe
+3. Third is the resulting dataframe
+
+The functions **never** modify their inputs, always return a new data frame
+```{r fig.keep='none'}
+filter(flights, month == 2, day == 2)
+```
+
+### Comparisons
+To compare sets one can use booleans operations:
+![](images/boolean.png)
+Remember to simply complicated statements:
+- %in% is used to select multiple "or" statements: `month %in% c(1,2)`
+- `!(x & y)` becomes `!x | !y`
+- `!(x | y)` is the same as `!x & !y`
+Whenver there are multipart expression in `filter()` is better to make them explicit variables.
+
+**Missing variables**: Use often the function `is.na(x)` as a way to check if the value is `NA` or not.
+**Select columns**: use `select()` with a number of helper functions:
+  - `starts_with()`, `ends_with()`, `contains()`, `matches()` + regular expressions, `num_range()`
+- Instead of `select()` that drops the columns not selected, it is better to use `rename()` to rename variables
+
+**Mutate**: it is useful to create new variables. If one wants to only holds the new variables that one created it is enough to just use `transmute()`. Arithmetic operators can be use.
+- %/% is used for integer division
+- %% for remainder
+- log(), log2(), log10(), ... for logarithms
+- Offsets lead() and lag() allow to refer to leading or lagging values - to computer running differences
+```{r}
+x <- 1:10
+lag(x)
+lead(x)
+```
+- Also cumuluative and rollin aggregates: `cumsum()`, `cumprod()`, `cummin()`, `cummax()`
+
+**Summarise**: is useful only if used with `group_by()` 
+- Remember to use `na.rm = TRUE` to remove all the na rows!
+- Useful to use counts of non-missing values or just a count: `n()` or `sum(!is.na())`
+
+**Tip**: use Cmd + shift + P to resend the previously used chunk to the console
+
+### Mutate groups
+Find all groups bigger than x
+```{r fig.keep='none'}
+popular_dest <- flights %>% 
+  group_by(dest) %>% 
+  filter(n() > 365)
+popular_dest
+```
+
+## Wickman - Chapter 7 - Exploratory Data Analysis
+EDA is an iterative cycle between:
+1. Generating questions about the data
+2. Searching for answers by visualizing, transforming and modelling data
+3. Using what we learned to refine questions and generate new questions
+
+```{r fig.keep='none'}
+library(tidyverse)
+```
+
+###Variation
+The tendncy of the values of a variable to change from measurement to measurement. Categorical variables can vary if one measrues across different subjects. The best way to understand the variables is to visualize its patterns.
+
+Categorical variables can be visualized with a bar chart. Continious with an histogram.
+```{r fig.keep='none'}
+smaller <- diamonds %>% filter(carat < 3)
+ggplot(data = smaller, mapping = aes(x = carat)) +
+  geom_histogram(binwidth = 0.01) +
+  coord_cartesian(xlim = c(0, 2), ylim = c(0, 500))
+```
+
+**Unusual values**: to spot them can be hard, therefore it is easier to zoom into the y axis (or x) by using the y-axis with `coord_cartesian()`:
+```{r fig.keep='none'}
+ggplot(diamonds) +
+  geom_histogram(mapping = aes(x = y), binwidth = 0.5) + 
+  coord_cartesian(xlim = c(0, 2), ylim = c(0, 500))
+```
+
+**Missing values**: `ifelse()` has three arguments. The first argument test should be a logical vector. The result will contain the value of the second argument, yes, when test is TRUE, and the value of the third argument, no, when it is false.
+
+### Others
+```{r}
+diamonds %>%
+  count(color, cut) %>%
+  ggplot(mapping = aes(x = color, y = cut)) +
+  geom_tile(mapping = aes(fill = n))
+```
+This is used to plot the residuals and then plotting the relatioship between cut and price
+```{r}
+library(modelr)
+mod <- lm(log(price) ~ log(carat), data = diamonds)
+diamonds2 <- diamonds %>%
+  add_residuals(mod) %>% 
+  mutate(resid = exp(resid))
+ggplot(data = diamonds2) + geom_point(mapping = aes(x = carat, y = resid))
+ggplot(diamonds2) +
+  geom_boxplot(mapping = aes(x = cut, y = resid))
+```
+
+## Wickman - Chapter 17 - Pipes
+The pipe operator comes from the **magritt** package
+```{r fig.keep='none'}
+library(magrittr)
+```
+The pipe works by performing a lexical transformation, which means that magrittr reassembles the code to a form that workds by overwriting an intermediate object
+```{r fig.keep='none' error=TRUE}
+pipe <- function(.) {
+  . <- tranformation1(., x = y)
+  . <- tranformation2(., y = z)
+}
+pipe(foo_foo)
+```
+The pipe will not work with:
+- Functions that use the current environment, e.g. `assign()`
+  - One should be explicit about the environent by definig a variable env and then specifying it in the `assing()` function.
+- functions that use lazy evaluation:
+  - `tryCatch()`, `try()`, `suppressMessages()`, `supporessWarnings()`
+  
+### Other tools
+- **The Tee pipe** is used when one wants to call a function for its side-effects. This returns the left-hand side: which means that it "skips" one calculation, because in that calculation nothing would have been returned anyways.
+- **the %$%** operator: it explodes the variables in a data frame to refer to them explicitely
+- **The %<>% operator** allows to replace code
+```{r fig.keep='none' error=TRUE}
+mtcars <- mtcars %>% transform(cyl = cyl * 2)
+#to
+mtcars %<>% transform(cyl = cyl * 2)
+```
+
+
+## Seltman - Chapter 4 - Exploratory Data Analysis
+EDA is a critical first step in analyizing the data from an experiment because of 5 main point that it helps you achieve:
+- Detect mistakes
+- Checks assumption
+- Preliminary selection of appropriate models
+- Determines relationships among the explanatory variables
+- Assess the direction and size of relationships between explanatory and outcome variables
+
+Commonly the data used is collected into a rectangualr array (spreadsheet or db). EDA is generally cross-classified in 2 ways:
+- Each method is non-graphical or graphical
+  - Non Graphical methods use summary statistics
+- Each method is either univariate or multivariate
+  - Univariate look at one data column at a time
+  - Multivariate look at two or more variables
+  
+### Univariate non-graphical EDA
+Measurement represent observations for a single characteristic such as age, gender. These represent a "sample distribution" which represents the "population distribution" of the variable.
+
+The characteristics of interest for a categorical variable are the range of valuesand the frequency/relative frequency of occurrence for each value. Usually are expressed in a simple tabulation.
+
+- **Central Tendency** has to do with typical or middle values (mean, median or mode). For symmetric distribution, the mean and the media coincide. For unimodal skewed distirbutions the mean is farther is the direction of the pulled out tail of the distribution than the median --> that is the reason why the median is often chosen over the mean.
+- **The median** has **Robustness property** property that shows that moving some data tends not to change the value of the median.
+- **Mode** Describes whether a distribution has a single peak or two or more peaks.
+
+#### Spread
+**Spread** is a distribution measure.
+It uses three main measures:
+1. The Variance is a standard measure of spread and signifies the distance of the data value form the mean of all of the n data values.
+*$s^2 = \sum_{i=1}^{n}(x_i-x)^2/(n-1)$
+  1. Another equivalent formula is $S^2 = SS/df$ (where SS is the sum of squared deviations/ sum of squares). The **variance** of a measurement which has subject-to-subject variability, environmental variability, and quality-of-measurement variability is equal to the sum of the three variances
+2. **Standard deviation** is the square root of the variance.
+
+> Both Variance and Standard Deviation are used to measure the spread of the data. For normally distributed data, 95% of the values lie within 2 sd of the mean.
+
+3. **The interquartile range**. THe quartiles of a population or a sample are the three values which divide the distribution or observed data into even fourths. $IQR = Q3-Q1$. It is a more robust measure of spread than the variance or the sd. A few extreme outliers have little or no effect of the IQR.
+
+#### Skewness and kurtosis
+*Skewness is a measure of asymmetry: $e$.
+*Kurtosis is a measure of peakedness realtive to a gaussian shape: $u$.
+Both are often reported along with their standard errors.
+
+![](images/3.png)
+
+### Univariate non-graphical EDA
+Non-graphical methods, even if more quantitative, cannot give us the full picture of what is happening in the data. It is necessary to use graphical methods even if they involve a degree of subjective analysis.
+
+#### Histograms
+It is the only technique that makes sense for categorical data. A bar plot in which each bar represents the frequency or proportion of cases for a range of values. Generally choose between 5-30 bins depending on the amount of data and distribution
+
+> Best way to learn about your data including central tendency spread, modality, shape and outliers.
+
+#### Stem-and-leaf plots
+#### Boxplots
+Most commonly in vertical format. Useful to present information about the central tendency, symmetry and skew, as well as outliers. But they can be misleading about multimodality.
+
+![](images/4.png)
+
+Let's describe this picture by word:
+- The median (not mean!) is 4 eggs, so no more than half of the hens laid more than 4 eggs and no more than half of the hens laid less than 4 eggs. (This is based on the technical definition of median; we would usually claim that half of the hens lay more or half less than 4, knowing that this may be only approximately correct.).
+- We can also state that one quarter of the hens lay less than 3 eggs and one quarter lay more than 5 eggs (again, this may not be exactly correct, particularly for small samples or a small number of different possible values).
+- This leaves half of the hens, called the “central half”, to lay between 3 and 5 eggs, so the interquartile range (IQR) is Q3-Q1=5-3=2.
+- The interpretation of the whiskers and outliers is just a bit more complicated. Any data value more than 1.5 IQRs beyond its corresponding hinge in either direction is considered an “outlier” and is individually plotted. Sometimes values beyond 3.0 IQRs are considered “extreme outliers” and are plotted with a different symbol. In this boxplot, a single outlier is plotted corresponding to 9 eggs laid, although we know from that there are actually two hens that laid 9 eggs. This demonstrates a general problem with plotting whole number data, namely that multiple points may be superimposed, giving a wrong impression. (Jittering, circle plots, and starplots are examples of ways to correct this problem.) This is one reason why, e.g., combining a tabulation and/or a histogram with a boxplot is better than either alone.
+- Each whisker is drawn out to the most extreme data point that is less than 1.5 IQRs beyond the corresponding hinge. Therefore, the whisker ends correspond to the minimum and maximum values of the data excluding the “outliers”.
+- The additional things you should notice on the plot are the symmetry of the distribution and possible evidence of “fat tails”. Symmetry is appreciated by noticing if the median is in the center of the box and if the whiskers are the same length as each other
+- In a skewed distribution the median is pushed in the direction of the shorter whisker. If the longer whisker is the top one, then the distribution is positively skewed (or skewed to the right, because higher values are on the right in a histogram). If the lower whisker is longer, the distribution is negatively skewed (or left skewed.) In cases where the median is closer to the longer whisker it is hard to draw a conclusion.
+
+> Fat tails when a histogram has a lot of values far from the mean relative to a Guassian distribution: Positive Kurtosis.
+> Boxplots show robust measures of location and spread as well as providing information about symmetry and outliers
+
+#### Quantile-normal plots
+
+![](images/5.png)
+
+It is the most complicated EDA technique. Called also QQ plot. It is used to show how well a particular sample follows a particular theoretical distirbution. We do not have to confuse them with a somple scatter plot of two variables.
+- If all the points fall on the diagonal line this means that the histogram of the variable will be norma distributed (depending on the chosen distribution).
+- The best way to look at them is to look at the tails of the distribution where one can see skewness of the distribution by seeing a difference between expected value and observed value.
+
+> QN plots allow detection of non-normality and diagnosis of skeness and kurtosis.
+
+### Multivariate non-graphical EDA
+Show the relationship between 2 or more variables in the form of a tabulation or statistics.
+
+#### Cross-tabulation
+For 2 variables it is performed by making a 2-way table with columns headings that match the levels of one variable and row headings that match the levels of the other, then fillin in th ecounts of all subjects that share a pair of levels
+#### Correlation for categoricla data
+
+#### Univariate statistics by category
+Producing one-way ANOVA tables and then using them to compare between variables.
+
+#### Correlation and covariance
+Is a measure of how much two variables vary toghether: how much we expect one varible to change when the other chagnes. Independece implies zero correlation but the reverse is not necessarily true.
+Formula of covariance: $Cov(X,Y)=\sum_{i=1}^{n}(x_i-x)(y_i-y)/(n-1)$
+
+### Multivariate grahical EDA
+Few techniques for EDA of two categorical random variables. One is grouped barplot with each gorup representing one level of one of the variables and each bar within a gorup representing the levels of the other variables.
+
+> Side-by-side boxplots are the best graphical EDA technique for exam- ining the relationship between a categorical variable and a quantitative variable, as well as the distribution of the quantitative variable at each level of the categorical variable.
+
+### Degrees of freedom
+The degress of freedom for a statistic is the number of independent pieces of information that go into the calculation of the statistic.
+
+
+
+
+
+
+
+
+
+
+

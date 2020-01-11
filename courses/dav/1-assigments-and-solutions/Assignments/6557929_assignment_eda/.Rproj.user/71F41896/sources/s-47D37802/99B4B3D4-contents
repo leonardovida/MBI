@@ -1,0 +1,51 @@
+---
+title: "Assignment Exploratory Data Analysis"
+output:
+  pdf_document: default
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    fig_width: 5
+    fig_height: 4
+---
+# Assignment 1
+Leonardo Vida
+ID: 6557929
+
+## Dataset
+### General information
+The dataset used in this assignment is the training set of the ["House Prices"](https://www.kaggle.com/c/house-prices-advanced-regression-techniques) dataset provided by Kaggle. The dataset comes with file providing the full description of each column *data_description.txt*. Both files are located in the *data* folder, as requested in the assignment. The dataset is meant to be used in a competition on Kaggle to predict the final prices of a dataset of houses in Ames, Iowa. As a matter of fact, the 79 explanatory variables give a comprehensive description of the most significant aspects of the average residential home.
+
+As explained in the subsection below, the column description will be used to select the most relevant features of the dataset on which the Exploratory Data Analysis will be conducted.
+
+### Dataset description
+```{r  echo=FALSE, results='hide'}
+#Import statements
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+```
+The file is read into `houses` and only the most relevant columns are selected.
+```{r results='hide'}
+houses <- read_csv("data/train.csv") %>% 
+  as_tibble() %>% 
+  select(c(MSSubClass, MSZoning, LotShape, LandContour, Neighborhood, Condition1,
+           Condition2, OverallQual, OverallCond, YearBuilt, MoSold, YrSold))
+```
+
+Summaries of relevant numeric variables
+```{r echo=FALSE}
+summaries <- houses %>% 
+  select(c(MSSubClass, OverallQual, OverallCond, YearBuilt, MoSold, YrSold)) %>% 
+  summary()
+print(summaries)
+```
+
+Descriptive plots
+
+Explain what you did and why (maximum 3 paragraphs total) if applicable, note findings such as
+outliers or group differences
+

@@ -1,0 +1,378 @@
+---
+title: "Assignment Prediction Model"
+output:
+  pdf_document: default
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    fig_width: 5
+    fig_height: 4
+---
+
+# Assignment 2
+Leonardo Vida
+ID: 6557929
+
+## Dataset
+### General information
+The dataset used in this assignment comes from the same dataset of my previous assignment. The dataset is the ["House Prices"](https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data) dataset provided by Kaggle. It contains the most relevant characteristics of houses sold between 2006 and 2010 in Ames, Iowa. The dataset comes with a file providing the full description of each column.
+
+Therefore, the `data` folder contains:
+* `train.csv`: train dataset used to train one's models on;
+* `test.csv`: test dataset used to submit own's models to Kaggle;
+* `"data_description.txt`: information file regarding the meaning of each column.
+
+```{r include=FALSE}
+# Set global options for knitr to format the notebook's output
+knitr::opts_chunk$set(
+  echo = TRUE, cache = TRUE, fig.keep = 'last',
+  fig.align = 'center', message = FALSE,
+  warning = FALSE
+)
+```
+
+### Variables selection
+```{r echo=TRUE, results='hide', error=FALSE}
+#Import statements
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(glmnet)
+library(moments)
+library(forcats)
+```
+
+The file is read into a tibble, a tweaked version of a data frame created for the tidyverse. Of the tibble `houses` only the most relevant columns for the exploratory analysis are selected. In this regards, only quantitative variables will be selected, to reduce the need of recoding variables into numerical factors.
+```{r results='hide'}
+# Import datasets
+set.seed(1)
+
+houses <- read_csv("data/train.csv") %>% 
+  as_tibble() %>%
+  filter(!is.na(SalePrice)) 
+
+houses.testing <- read_csv("data/train.csv") %>% 
+  as_tibble() %>% 
+  filter(!is.na(SalePrice))
+
+# Elminate Id column
+houses <- subset(houses, select = -c(Id))
+houses.testing <- subset(houses.testing, select = -c(Id))
+```
+
+The dependent variable is `SalePrice`, the remaining variables are the independent variable and will be used to predict the price of a certain house with determined characteristics.
+
+### Analysis
+The analysis is divided in two sections. First, a manual selection of the best variables is carried out. Secondly, an automatic selection of the variables is run. Finally, results are shown and the best model is chosen. This analysis will be carried out only using the numeric variables already present in the dataset. Therefore, the characters variables will not be transformed into factors
+
+After looking at the summary of all the variables (hidden in the output), we will visualize the correlation between the variables and `SalePrice`.
+```{r results = 'hide'}
+houses %>% 
+  summary()
+
+numericVars <- which(sapply(houses, is.numeric))
+num.vars <- houses[, numericVars]
+# Create correlation table
+cor.numeric.all <- cor(num.vars, use = "pairwise.complete.obs")
+# Sort
+cor.numeric <- as.matrix(sort(cor.numeric.all[,'SalePrice'], decreasing = TRUE))
+# Eliminate low correlation values
+cor.numeric <- names(which(apply(cor.numeric, 1, function (num) abs(num) > 0.4)))
+
+# Select only the subset with highest correlation 
+houses <- subset(houses, select = c("SalePrice", "OverallQual",
+                                    "GrLivArea", "GarageCars", "GarageArea",
+                                    "TotalBsmtSF", "1stFlrSF", "FullBath",
+                                    "TotRmsAbvGrd", "YearBuilt","YearRemodAdd",
+                                    "GarageYrBlt", "MasVnrArea", "Fireplaces"))
+
+```
+From the analysis of the correlation, the variable most correlated - and therefore those which will explain more of the variation of - SalePrice, are: OverallQual, GrLivArea, GarageCars, GarageArea, TotalBsmtSF, 1stFlrSF, FullBath, TotRmsAbvGrd, YearBuilt, YearRemodAdd, GarageYrBlt, MasVnrArea, Fireplaces
+
+The next step is to fix the `NA` present among the chosen variables: GarageYrBlt
+```{r}
+NAcol <- which(colSums(is.na(houses)) > 0)
+NAcol <- sort(colSums(sapply(houses[NAcol], is.na)), decreasing = TRUE)
+
+# Put the Mansory area to zero if NA
+houses$MasVnrArea[is.na(houses$MasVnrArea)] <-0
+
+# Assume that the garage was built the same year as the house and replace accordingly
+houses$GarageYrBlt[is.na(houses$GarageYrBlt)] <- houses$YearBuilt[is.na(
+  houses$GarageYrBlt)]
+
+NAcolChosenVars <- which(colSums(is.na(houses)) > 0)
+```
+
+
+***
+
+#### Regression
+
+We will be evaluating our results on the MSE $$ mean((true-prediction)^2)) $$. We will be using a linear regression and we predict that its results will not be optimal.
+
+```{r}
+# Function for MSE
+mse <- function(yTrue, yPred) mean((yTrue - yPred)^2)
+
+# These functions are not used
+# Function for RMSE
+rmse <- function(yTrue, yPred) sqrt(mean((yTrue - yPred)^2))
+
+# Function for MABS
+mabs <- function(yTrue, yPred) (sum(abs(yTrue - yPred))/length(yTrue))
+
+generateTestResults <- function(yTrue, yPred) {
+  results <- c(mse(yTrue, yPred),
+               rmse(yTrue, yPred),
+               mabs(yTrue, yPred)
+                    )
+  return(results)
+}
+```
+
+Once created the functions we split the train dataset in train, test and validation
+```{r}
+dim(houses)
+
+# Creating splits (train = 65%, valid = 20%, test = 15%)
+split <- c(
+  rep("train",949),
+  rep("valid",292),
+  rep("test",219)
+)
+
+houses <- na.omit(houses)
+
+# Inserting split as in previous exercises
+houses <- houses %>% 
+  mutate(split = sample(split, 1460, FALSE))
+
+# Rename because of issues
+houses <- houses %>% 
+  rename(oneStFlrSF = `1stFlrSF`)
+
+
+# Creating subsamples
+houses.train <- houses %>% filter(split == "train")
+houses.train <- houses.train[, -c(15)]
+                  
+houses.test <- houses %>% filter(split == "test")
+houses.test <- houses.test[, -c(15)]
+
+houses.valid <- houses %>% filter(split == "valid")
+houses.valid <- houses.valid[, -c(15)]
+```
+ 
+Instantiate the function from Erik-Jan van Kesteren (2018) to generate combinations of formulas. These combinations will be used in this first part of the analysis.
+```{r}
+# R function to generate all formulas up to size n
+# Erik-Jan van Kesteren
+# October 2018
+# 
+# Input : 
+#  p      : number of variables 
+#  x_vars : character vector of x vars
+#  y_var  : character of y var
+#
+# Output: character vector of formulas
+generateFormulas <- function(p, x_vars, y_var) {
+  # Input checking
+  if (p %% 1 != 0)           stop("Input an integer n")
+  if (p > length(x_vars))    stop("p should be smaller than number of vars")
+  if (!is.character(x_vars)) stop("x_vars should be a character vector")
+  if (!is.character(y_var))  stop("y_vars should be character type")
+  
+  # combn generates all combinations, apply turns them into formula strings
+  apply(combn(x_vars, p), 2, function(vars) {
+    paste0(y_var, " ~ ", paste(vars, collapse = " + "))
+  })
+}
+```
+ 
+ 
+Now we can move on to creating the models using the variables chosen beforehand. We also plot the prediction vs. the real value and the residuals as a function of the predicted value.
+```{r}
+results <- tibble(
+  MODEL = list(),
+  MSE = list(),
+  RMSE = list(),
+  MABS = list()
+)
+
+# Creating test model predicting the ln of Sale Price
+model1 <- lm(log10(SalePrice) ~ OverallQual + GrLivArea +
+               GarageCars + GarageArea + TotalBsmtSF + 
+               FullBath + TotRmsAbvGrd + YearBuilt + 
+               YearRemodAdd + GarageYrBlt + MasVnrArea + 
+               Fireplaces, data = houses.train)
+
+pred1 <- predict(model1, newdata = houses.valid)
+results1 <- generateTestResults(log10(houses.valid$SalePrice), 
+                                predict(model1, newdata = houses.valid))
+
+# Plotting prediction
+ggplot(data = houses.valid, aes(x= pred1,
+                                y = log10(houses.valid$SalePrice))) +
+  geom_point(alpha = 0.2,color="black") +
+  geom_smooth(aes(x = pred1, y = log10(houses.valid$SalePrice)), color = "black") +
+  geom_line(aes(x = log10(houses.valid$SalePrice),
+                y = log10(houses.valid$SalePrice)),
+            color = "blue", linetype = 2) +
+  theme_minimal()
+```
+As visible in the Figure above, the predictions are decently good. As visible, the plot should be arranged around the "line of perfect prediction", but are underpredicting (predicting lower values than the real one) the more expensive the house is. Our model with all the variables does predict in a good manner the majority of the houses, but fails at both extremes.
+
+Plot of the residuals as a function of the predicted value
+```{r}
+ggplot(data = houses.valid,
+       aes(x = pred1, y = pred1 - log10(houses.valid$SalePrice))) +
+  geom_point(alpha = 0.2, color = "black") +
+  geom_smooth(aes(x = pred1 ,
+                  y = pred1 - log10(houses.valid$SalePrice)),
+              color = "black")
+```
+As visible in the Figure above and already stated before, the model is making error in the prediction at both extremes of Sale Price's value. 
+
+```{r}
+print(results1)
+```
+
+We also report the coefficient of this first model. Here we can notice that the strongest positive coefficient are the overall quality of the house and the number of Fireplaces. This shows could be summarized as variables that indicate the higher quality/ luxury of the house. A doubt remain regarding the reason behind the negative sign of the Masonry areas.
+```{r}
+print(coefficients(model1))
+```
+
+***
+
+### Logistic regression
+
+We continue with the datasets created for the linear regression. This is because the dataset chosen would need much more work to complete all the columns with `NAs`. Unfortunately, when the dataset was chosen this possibilty was not taken into consideration. Before taking this decision the author spent many hours trying to fix the missing `NAs` before, evenutally, giving up.
+
+Now we can use all the variables to run a lasso regression
+```{r}
+# Using all variables
+x_train <- model.matrix(SalePrice ~ ., data = houses.train)
+
+# Perform lasso regression
+lasso.regression <- glmnet(x_train[, -1],
+                           houses.train$SalePrice,
+                           family = "gaussian",
+                           lambda = 15)
+```
+
+
+The selected coefficients are:
+```{r}
+# Outputs the chosen coefficients
+rownames(coef(lasso.regression))[which(coef(lasso.regression) != 0)]
+```
+
+Now we predict and plot the results
+```{r}
+# Predicted versus observed plot
+x_valid <- model.matrix(SalePrice ~ ., data = houses.valid)
+x_valid <- x_valid[, -1]
+
+y_pred <- as.numeric(predict(lasso.regression, newx = x_valid))
+
+tibble(
+  predicted = y_pred,
+  observed = houses.valid$SalePrice
+) %>% ggplot(aes(predicted, observed)) +
+  geom_abline() +
+  geom_point() +
+  theme_minimal()
+```
+Above is the plot of predicted vs. observed final sale prices. As visible from the small sparsity of the data, the logisitic regression already performs better than the linear regression.
+
+The mse of this model, not using logarithms, is:
+```{r}
+mse(houses.valid$SalePrice, y_pred)
+```
+
+
+### Tuning lambda
+
+```{r results = "hide"}
+regression.1 <- glmnet(x_train[, -1],
+                           houses.train$SalePrice,
+                           family = "gaussian")
+
+coef(regression.1)
+plot(regression.1)
+
+x.cv <- model.matrix(SalePrice ~., houses.train)[, -1]
+
+regression.cv <- cv.glmnet(x.cv,houses.train$SalePrice,nfolds = 20)
+
+best_lambda <- regression.cv$lambda.min
+plot(regression.cv)
+```
+```{r}
+# Using the test dataset
+x.test.cv <- model.matrix(SalePrice ~ ., data = houses.test)
+x.test.cv <- x.test.cv[, -1]
+
+prediction.cv <- as.numeric(predict(regression.cv, x.test.cv, best_lambda))
+
+# Plotting as before
+tibble(
+  y_pred = prediction.cv,
+  y_true = houses.test$SalePrice
+) %>% 
+  ggplot(aes(y_pred, y_true)) +
+  geom_abline() +
+  geom_point() +
+  theme_minimal()
+```
+The resulting mse from the test set is:
+```{r}
+mse(houses.test$SalePrice, prediction.cv)
+```
+
+### Comparing all three methods
+
+Finally, taking inspiration from a previous class' exercise we compare all three methods previously evaluated.
+```{r}
+x_train <- model.matrix(SalePrice ~ ., data = houses.train)[ ,-1]
+
+lm.all <- lm(SalePrice ~., houses.train)
+lm.lasso <- glmnet(x_train, houses.train$SalePrice, lambda = 50)
+lm.lasso.cv <- cv.glmnet(x_train, houses.train$SalePrice, nfolds = 20)
+
+lambda.min <- lm.lasso.cv$lambda.min
+
+matrix.test <- model.matrix(SalePrice ~., houses.test)[ ,-1]
+
+lm.all.pred <- as.numeric(predict(lm.all, newdata = houses.test))
+lm.lasso.pred <- as.numeric(predict(lm.lasso, newx = matrix.test))
+lm.lasso.cv.pred <- as.numeric(predict(lm.lasso.cv, newx = matrix.test, s = lambda.min))
+
+mseModel <- function(true, predicted) {
+  mse <- mean((true-predicted)^2)
+  return(mse)
+}
+
+lm.all.mse <- mseModel(houses.test$SalePrice, lm.all.pred)
+lm.lasso.mse <- mseModel(houses.test$SalePrice, lm.lasso.pred)
+lm.lasso.cv.mse <- mseModel(houses.test$SalePrice, lm.lasso.cv.pred)
+
+# As from Regression 2 exercise
+tibble(Method = as_factor(c("lm", "lasso", "cv_las")), MSE = c(
+          all = lm.all.mse,
+          lasso = lm.lasso.mse,
+          cv = lm.lasso.cv.mse)) %>% 
+  ggplot(aes(x = Method, y = MSE, fill = Method)) +
+  geom_bar(stat = "identity", col = "black") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title = "Comparison of test set MSE for different prediction methods") +
+  scale_fill_viridis_d()
+```
+This result is more than underwhelming. However, this analysis was extremely limited by the wrong choice of the author of using a dataset very hard to clean. Given that cleaning is a fundamental part in order to have a fully functional model, the results suffered from it.  

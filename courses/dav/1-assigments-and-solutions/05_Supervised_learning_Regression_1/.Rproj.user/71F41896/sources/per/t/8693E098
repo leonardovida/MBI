@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1543510821867.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "732196063",
+    "id" : "8693E098",
+    "lastKnownWriteTime" : 1543435476,
+    "last_content_update" : 1543435476,
+    "path" : "~/Desktop/Utrecht University/5. Data Analysis and Visualization/2. Assignments material/05_Supervised_learning_Regression_1/regression_1.Rmd",
+    "project_path" : "regression_1.Rmd",
+    "properties" : {
+        "cursorPosition" : "122,2",
+        "scrollLine" : "108"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

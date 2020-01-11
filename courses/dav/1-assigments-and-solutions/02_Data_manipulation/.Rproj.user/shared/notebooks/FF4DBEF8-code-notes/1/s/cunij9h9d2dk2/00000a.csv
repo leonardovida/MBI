@@ -1,0 +1,11 @@
+"0","popular.apps <- "
+"0","  read.csv(""02_Data_manipulation/data/googleplaystore.csv"") %>%"
+"0","  mutate(Downloads = parse_number(Installs, ""+"")) %>%"
+"0","  filter(Downloads > 500000000) %>%"
+"0","  arrange(Rating) %>%"
+"0","  select(Rating, Category, Installs) %>%"
+"0","  distinct(App, .keep_all = TRUE)"
+"2","Trying to compute distinct() for variables not found in the data:
+- `App`
+This is an error, but only a warning is raised for compatibility reasons.
+The operation will return the input unchanged."

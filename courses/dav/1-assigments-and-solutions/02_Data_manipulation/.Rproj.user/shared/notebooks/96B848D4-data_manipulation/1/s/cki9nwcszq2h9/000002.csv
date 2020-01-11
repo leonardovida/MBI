@@ -1,0 +1,5 @@
+"0","filter(students, grade < 5.5)
+"
+"2","NAs introduced by coercion"
+"2","Error in filter(students, grade < 5.5) : object 'grade' not found
+"

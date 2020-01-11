@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1543510836749.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "833266126",
+    "id" : "451BF27",
+    "lastKnownWriteTime" : 1543823634,
+    "last_content_update" : 1543823634223,
+    "path" : "~/Desktop/Utrecht University/5. Data Analysis and Visualization/2. Assignments material/code-notes.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "478,0",
+        "scrollLine" : "459"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
