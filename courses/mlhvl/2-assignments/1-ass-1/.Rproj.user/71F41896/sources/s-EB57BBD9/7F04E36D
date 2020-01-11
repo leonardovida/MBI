@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1568131257234.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "7F04E36D",
+    "lastKnownWriteTime" : 1561523244,
+    "last_content_update" : 1561523244,
+    "path" : "~/Desktop/Utrecht University/11. ML for human vision and language/ACTS-master/assignment1/final/20190516_Final.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "763,1",
+        "scrollLine" : "751"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

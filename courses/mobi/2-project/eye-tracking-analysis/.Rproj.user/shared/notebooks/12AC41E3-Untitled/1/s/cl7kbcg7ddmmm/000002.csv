@@ -1,0 +1,36 @@
+"0","# Import csv"
+"0","dataset <- read_csv(""data/measurements.csv"", col_names = TRUE)"
+"2","Parsed with column specification:
+cols(
+  .default = col_double(),
+  type_eye_tracking = [31mcol_character()[39m,
+  age = [31mcol_character()[39m,
+  education = [31mcol_character()[39m,
+  experience = [31mcol_character()[39m
+)
+"
+"2","See spec(...) for full column specifications.
+"
+"0","# Convert variables to factors"
+"0","dataset <- dataset %>% "
+"0","  dplyr::select(type_eye_tracking, total_perceived_usefulness, total_perceived_ease_of_use, total_intention_to_use,total_time, total_accuracy, precision) %>% "
+"0","  convert(fct(type_eye_tracking))"
+"0","  "
+"0","# Delete first row"
+"0","dataset <- dataset[-1,]"
+"0",""
+"0","dataset.blinking <- dataset %>% "
+"0","  filter(type_eye_tracking == ""Blinking"")"
+"0",""
+"0","dataset.gazing <- dataset %>% "
+"0","  filter(type_eye_tracking == ""Gazing"")"
+"0",""
+"0","dat.m <- melt(dataset)"
+"2","Using type_eye_tracking as id variables
+"
+"0","dat.g <- melt(dataset.gazing)"
+"2","Using type_eye_tracking as id variables
+"
+"0","dat.b <- melt(dataset.blinking)"
+"2","Using type_eye_tracking as id variables
+"

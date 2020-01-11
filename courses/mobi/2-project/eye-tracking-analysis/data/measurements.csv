@@ -1,0 +1,28 @@
+participant_id,type_eye_tracking,distance,age,education,experience,PU_1,PU_2,PE_1,PE_2,PU_3,PE_3,UI_1,PE_4,PU_4,PU_5,PE_5,UI_2,UI_3,total_perceived_usefulness ,total_perceived_ease_of_use,total_intention_to_use,Facebook post,like the post,select armel,Scroll down,Watch the gif,total_time,1(fill in the number of cirkels from the target),2,3,4,5,6,7,8,9,10,total_time_accuracy,total_accuracy,precision
+80,Gazing,48,15 - 24,Pre-Vocational Secondary School (VMBO),Never used it,3,5,2,5,4,2,4,4,3,4,3,5,2,3.80,3.20,3.67,,,,,,,2,2,3,2,3,2,1,1,4,3,27,1.54,0.95
+69,Blinking,45,15 - 24,Pre-Vocational Secondary School (VMBO),Never used it,1,3,2,4,4,2,2,4,2,4,4,5,5,2.80,3.20,4.00,7,10,8,9,15,49,1,1,0,0,1,2,2,2,0,1,36,0.67,0.82
+65,Gazing,40,15 - 24,Pre-Vocational Secondary School (VMBO),Never used it,4,3,5,5,4,4,3,5,2,4,4,3,4,3.40,4.60,3.33,19,5,6,19,12,61,1,3,3,2,3,2,3,3,3,2,32,1.68,0.71
+60,Blinking,52,15 - 24,Pre-Vocational Secondary School (VMBO),Never used it,2,3,2,4,4,2,3,4,3,4,4,4,5,3.20,3.20,4.00,5,5,9,19,19,57,1,2,1,1,2,1,1,2,2,1,68,0.94,0.52
+81,Gazing,45,15 - 24,Senior Secondary Vocational Education and Training (MBO),Never used it,4,5,4,3,3,3,2,3,3,3,4,4,5,3.60,3.40,3.67,10,22,70,11,25,138,1,2,6,4,2,2,3,6,7,5,30,2.55,2.10
+82,Blinking,37,15 - 24,University Bachelor,Never used it,2,4,4,4,2,4,3,4,4,3,4,4,3,3.00,4.00,3.33,3,4,7,12,15,41,3,1,1,1,0,1,0,1,2,1,33,0.74,0.88
+83,Gazing,34,15 - 24,Senior Secondary Vocational Education and Training (MBO),Never used it,4,4,4,4,4,5,2,5,1,5,3,4,3,3.60,4.20,3.00,5,7,20,13,36,81,2,3,3,2,4,7,5,3,2,3,34,2.28,1.58
+84,Blinking,44,25 - 34,University Preparatory Education (VWO),Never used it,5,3,3,5,5,1,4,5,0,3,4,4,4,3.20,3.60,4.00,2,8,11,12,20,53,1,2,3,1,0,3,1,2,1,1,80,1.01,0.97
+85,Gazing,43,25 - 34,Senior Secondary Vocational Education and Training (MBO),Never used it,4,4,2,4,5,3,1,3,2,4,3,4,4,3.80,3.00,3.00,5,9,15,23,38,90,3,5,2,3,3,4,6,5,4,9,30,2.95,2.01
+420,Blinking,38,25 - 34,Senior Secondary Education (HAVO),Never used it,1,3,4,4,4,4,1,4,1,4,4,4,4,2.60,4.00,3.00,3,5,2,17,16,43,3,0,0,1,1,0,1,0,2,0,25,0.54,1.03
+86,Gazing,45,15 - 24,University of Applied Science (HBO),Used it a couple of times,2,4,2,4,4,2,3,4,4,4,5,4,3,3.60,3.40,3.33,9,13,3,12,17,54,1,3,4,0,2,3,5,3,4,5,29,2.01,1.63
+87,Blinking,45,15 - 24,Senior Secondary Education (HAVO),Never used it,5,3,2,4,4,5,4,4,3,4,3,5,5,3.80,3.60,4.67,4,11,6,18,12,51,2,2,2,4,4,1,3,5,5,1,44,1.94,1.52
+89,Gazing,50,15 - 24,Pre-Vocational Secondary School (VMBO),Never used it,4,4,3,3,3,1,4,5,2,4,3,4,3,3.40,3.00,3.67,5,15,8,26,25,79,4,2,1,2,5,4,3,4,5,5,36,2.35,1.43
+90,Blinking,55,15 - 24,Senior Secondary Vocational Education and Training (MBO),Never used it,4,2,2,4,2,3,1,4,0,5,4,3,2,2.60,3.40,2.00,3,5,3,11,13,35,1,2,2,6,0,3,2,5,5,0,35,1.74,2.12
+91,Gazing,45,15 - 24,University of Applied Science (HBO),Never used it,4,3,1,4,3,5,1,2,1,3,4,2,3,2.80,3.20,2.00,25,8,5,11,9,58,4,6,2,0,5,0,5,6,5,4,32,2.48,2.26
+3,Gazing,45,15 - 24,University Bachelor,Never used it,2,1,5,4,2,3,3,4,1,4,2,3,4,2.00,3.60,3.33,4,13,11,11,23,62,2,2,0,4,1,0,4,2,4,1,27,1.34,1.56
+5,Blinking,45,15 - 24,University Bachelor,Never used it,1,4,2,4,4,2,1,4,3,2,3,2,2,2.80,3.00,1.67,2,6,3,8,16,35,1,4,1,2,0,3,3,2,2,2,36,1.34,1.15
+6,Blinking,40,15 - 24,University Bachelor,Used it once,3,1,1,3,1,3,0,5,0,2,1,1,1,1.40,2.60,0.67,6,12,6,13,30,67,2,1,0,1,3,6,6,2,8,2,26,2.08,2.64
+7,Blinking,30,35 - 44,University Master,Used it once,4,2,5,2,2,5,1,1,0,1,1,1,1,1.80,2.80,1.00,4,5,2,9,15,35,3,8,0,0,6,3,4,8,3,3,27,2.55,2.82
+8,Blinking,32,25 - 34,University Bachelor,Used it a couple of times,2,4,1,3,2,4,1,5,3,3,5,4,2,2.80,3.60,2.33,9,4,3,14,12,42,2,3,0,1,1,2,1,1,3,0,58,0.94,1.07
+9,Gazing,45,15 - 24,University Bachelor,Used it once,2,2,1,4,4,1,2,4,2,4,4,3,3,2.80,2.80,2.67,6,8,6,20,20,60,3,3,2,2,4,3,2,4,2,2,26,1.81,0.82
+10,Blinking,45,25 - 34,University Bachelor,Used it a couple of times,1,2,4,5,3,3,0,5,0,2,5,2,1,1.60,4.40,1.00,2,5,2,12,15,36,0,1,2,3,0,1,2,3,3,2,38,1.14,1.16
+11,Gazing,45,25 - 34,University Master,Used it once,2,3,1,4,2,3,3,4,1,2,2,2,3,2.00,2.80,2.67,7,6,19,16,40,88,2,3,2,3,2,1,5,3,1,0,25,1.47,1.40
+12,Gazing,45,25 - 34,University Master,Used it once,3,2,3,4,2,3,3,2,1,2,2,2,3,2.00,2.80,2.67,8,15,8,19,23,73,3,3,2,2,2,3,1,3,1,3,27,1.54,0.82
+13,Gazing,45,15 - 24,University Bachelor,Never used it,5,3,1,5,2,4,0,2,0,3,2,4,2,2.60,2.80,2.00,8,4,7,18,20,57,2,3,3,2,6,6,5,5,3,2,27,2.48,1.64
+14,Blinking,50,25 - 34,University Bachelor,Never used it,4,2,1,3,3,4,3,4,3,4,3,3,2,3.20,3.00,2.67,3,5,5,10,18,41,3,4,3,2,3,6,4,3,7,8,24,2.88,2.00
+16,Blinking,50,25 - 34,University Bachelor,Never used it,3,2,2,3,3,4,3,4,4,4,5,4,3,3.20,3.60,3.33,3,6,5,12,22,48,3,3,2,2,2,4,4,2,3,2,29,1.81,0.82

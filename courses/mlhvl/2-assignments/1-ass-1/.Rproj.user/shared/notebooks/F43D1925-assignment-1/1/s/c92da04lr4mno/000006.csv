@@ -1,0 +1,9 @@
+"0","model_4 %>% compile(
+ loss = 'categorical_crossentropy',
+ optimizer = 'optimizer_rmsprop(lr = 0.0001, decay = 1e-6)',
+ metrics = c('accuracy')
+)
+"
+"2","Error in do.call(object$compile, args) : 
+  'what' must be a function or character string
+"

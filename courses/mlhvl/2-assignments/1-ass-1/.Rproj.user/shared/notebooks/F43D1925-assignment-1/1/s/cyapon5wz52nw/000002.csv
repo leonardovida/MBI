@@ -1,0 +1,5 @@
+"0","y_train = to_categorical(y_train, 10)"
+"0","y_test = to_categorical(y_test, 10)"
+"0",""
+"0","# Test if it worked"
+"0","y_train %>% as_tibble %>% head(5)"

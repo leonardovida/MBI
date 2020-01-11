@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1560263193629.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2106413436",
+    "id" : "B77DCCD9",
+    "lastKnownWriteTime" : 1560945506,
+    "last_content_update" : 1560945507197,
+    "path" : "~/Desktop/Utrecht University/9. Mobile Interaction/2. Project/eye-tracking-analysis/Untitled.Rmd",
+    "project_path" : "Untitled.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "171,50",
+        "scrollLine" : "158",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

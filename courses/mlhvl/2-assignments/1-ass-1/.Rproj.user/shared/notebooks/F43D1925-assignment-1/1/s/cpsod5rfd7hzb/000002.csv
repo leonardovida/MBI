@@ -1,0 +1,4 @@
+"0","score_2 <- model_2 %>% evaluate("
+"0"," x_test, y_test,"
+"0"," verbose = 0"
+"0",")"

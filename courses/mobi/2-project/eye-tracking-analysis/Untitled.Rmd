@@ -1,0 +1,371 @@
+---
+title: "Eye tracking analysis"
+output: html_notebook
+---
+
+### Import libraries
+```{r}
+library(aod)
+library(arm)
+require(nnet)
+library(e1071)
+library(dplyr)
+library(hablar)
+library(mlogit)
+library(ggplot2)
+library(ggcorrplot)
+library(reshape2)
+library(tidyverse)
+```
+
+
+```{r}
+# Import csv
+dataset <- read_csv("data/measurements.csv", col_names = TRUE)
+
+# Convert variables to factors
+dataset <- dataset %>% 
+  dplyr::select(type_eye_tracking, total_perceived_usefulness, total_perceived_ease_of_use, total_intention_to_use,total_time, total_accuracy, precision) %>% 
+  convert(fct(type_eye_tracking))
+  
+# Delete first row
+dataset <- dataset[-1,]
+
+dataset.blinking <- dataset %>% 
+  filter(type_eye_tracking == "Blinking")
+
+dataset.gazing <- dataset %>% 
+  filter(type_eye_tracking == "Gazing")
+
+dat.m <- melt(dataset)
+dat.g <- melt(dataset.gazing)
+dat.b <- melt(dataset.blinking)
+```
+
+### Descriptive statistics
+
+```{r}
+summary(dataset)
+summary(dataset.blinking)
+summary(dataset.gazing)
+```
+
+
+```{r fig.height = 2, fig.width = 4}
+dat.m <- dat.m %>% 
+  hablar::convert(chr(variable, type_eye_tracking))
+
+names <- as_labeller(c(`total_perceived_usefulness` = "Total Perceived Usefulness", `total_perceived_ease_of_use` = "Total Perceived Ease of Use",`total_intention_to_use` = "Total Intention to Use"))
+
+dat.m %>% filter(variable == c("total_perceived_usefulness", "total_perceived_ease_of_use", "total_intention_to_use")) %>% 
+  group_by(type_eye_tracking) %>% 
+  ggplot() +
+  geom_boxplot(aes(x=type_eye_tracking, y=value ,fill = type_eye_tracking)) +
+  theme_minimal() +
+  facet_wrap(~ variable, scales = "free", labeller = names) +
+  theme(legend.position="bottom") +
+  ylab("Values (Likert scale)") +
+  xlab("Qualitative variables") +
+  scale_fill_hue(name="Type of eye tracking")
+
+
+names <- as_labeller(c(`total_time` = "Total Time",`total_accuracy` = "Total Accuracy", `precision` = "Precision"))
+
+dat.m %>% filter(variable == c("total_time", "total_accuracy", "precision")) %>% 
+  group_by(type_eye_tracking) %>% 
+  ggplot() +
+  geom_boxplot(aes(x=type_eye_tracking, y=value, fill = type_eye_tracking)) +
+  facet_wrap(~ variable, scales = "free", labeller = names) +
+  theme_minimal() +
+  theme(legend.position="bottom") +
+  ylab("Values of quantitative variables") +
+  xlab("Quantitative variables") +
+  scale_fill_hue(name="Type of eye tracking")
+
+
+# Box plots
+dat.m %>% filter(variable == "precision") %>% 
+  ggplot() +
+  geom_boxplot(aes(x = type_eye_tracking, y = value, fill = type_eye_tracking)) +
+  theme_minimal() +
+  theme(legend.position="bottom") +
+  ylab("Likert scale (1-5)") +
+  xlab("Total Perceived Usefulness") +
+  scale_fill_hue(name="Type of eye tracking")
+
+dat.m %>% filter(variable == c("total_time", "total_accuracy", "precision")) %>% 
+  ggplot(aes(x=variable, y=value)) +
+    geom_boxplot(aes(fill=type_eye_tracking)) + 
+    theme_minimal() +
+    theme(legend.position="bottom") +
+    ylab("Values of quantitative variables") +
+    xlab("Quantitative variables") +
+    scale_fill_hue(name="Type of eye tracking") +
+    facet_wrap( ~ variable, scales="free")
+
+
+# boxplot(dataset$total_perceived_ease_of_use, main="PE", sub=paste("Outlier rows: ", boxplot.stats(dataset$total_perceived_ease_of_use)$out))
+# 
+# boxplot(dataset$total_intention_to_use, main="UI", sub=paste("Outlier rows: ", boxplot.stats(dataset$total_intention_to_use)$out))
+# 
+# # Density plots
+# plot(density(dataset$total_perceived_usefulness), main="Density Plot: total_perceived_usefulness", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(dataset$total_perceived_usefulness), 2))) 
+# 
+# plot(density(dataset$total_perceived_ease_of_use), main="Density Plot: total_perceived_ease_of_use", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(dataset$total_perceived_ease_of_use), 2))) 
+# 
+# plot(density(dataset$total_intention_to_use), main="Density Plot: total_intention_to_use", ylab="Frequency", sub=paste("Skewness:", round(e1071::skewness(dataset$total_intention_to_use), 2))) 
+```
+
+### Correlation
+```{r}
+dataset_corr <- dataset %>% 
+  rename( "Total Perceived Usefulness" = total_perceived_usefulness, "Total Perceived Ease of Use" = total_perceived_ease_of_use , "Total Intention to Use" = total_intention_to_use, "Total Time" = total_time , "Total Accuracy" = total_accuracy, "Precision" = precision)
+
+corr <- round(cor(dataset_corr[,-1]), 1)
+# Compute a matrix of correlation p-values
+p.mat <- cor_pmat(dataset_corr[,-1])
+
+# Visualize default
+ggcorrplot(corr)
+
+# Non significant correlations are barred
+ggcorrplot(
+  corr, 
+  p.mat = p.mat, 
+  hc.order = TRUE, 
+  type = "lower",
+  lab = TRUE
+)
+
+# Non significant correlation are white
+ggcorrplot(
+  corr,
+  p.mat = p.mat,
+  hc.order = TRUE,
+  type = "lower",
+  lab = TRUE,
+  insig = "blank"
+)
+
+# Non significant correlation are present
+ggcorrplot(
+  corr,
+  hc.order = TRUE,
+  type = "lower",
+  lab = TRUE,
+)
+```
+
+### T-test and Chi-square
+```{r}
+dataset_chisquare <- dataset %>% 
+  mutate(type_eye_tracking = ifelse(type_eye_tracking == "Blinking", 1, 0))
+
+# hsb2 <- within(read.csv("https://stats.idre.ucla.edu/stat/data/hsb2.csv"), {
+#     race <- as.factor(race)
+#     schtyp <- as.factor(schtyp)
+#     prog <- as.factor(prog)
+# })
+
+attach(dataset)
+chi_intention <- chisq.test(table(type_eye_tracking, total_intention_to_use))
+chi_ease <- chisq.test(table(type_eye_tracking, total_perceived_ease_of_use))
+chi_usefulness <- chisq.test(table(type_eye_tracking, total_perceived_usefulness))
+
+summary(glm(type_eye_tracking ~ total_perceived_usefulness + total_intention_to_use + total_perceived_ease_of_use + total_accuracy + precision, data = dataset, family = binomial))
+
+summary(glm(type_eye_tracking ~ total_perceived_usefulness + total_intention_to_use + total_perceived_ease_of_use, data = dataset, family = binomial))
+
+```
+### T-test
+```{r}
+# Qualitative
+t.test(dataset.blinking$total_perceived_usefulness,dataset.gazing$total_perceived_usefulness)
+t.test(dataset.blinking$total_perceived_ease_of_use,dataset.gazing$total_perceived_ease_of_use)
+t.test(dataset.blinking$total_intention_to_use,dataset.gazing$total_intention_to_use)
+
+# Quantitative
+t.test(dataset.blinking$total_time,dataset.gazing$total_time)
+t.test(dataset.blinking$total_accuracy,dataset.gazing$total_accuracy)
+t.test(dataset.blinking$precision,dataset.gazing$precision)
+
+```
+
+
+
+### Visualizations
+
+```{r}
+# Qualitative variables on bar plot
+dataset %>% group_by(type_eye_tracking) %>% 
+  ggplot(aes(x = type_eye_tracking, y = total_perceived_usefulness, fill = type_eye_tracking)) +
+  geom_bar(stat="identity") +
+  xlab("Type of eye tracking") +
+  ylab("Total preceived usefulness") +
+  scale_fill_hue(name="Type of eye tracking")
+
+dataset %>% group_by(type_eye_tracking) %>% 
+  ggplot(aes(x = type_eye_tracking, y = total_perceived_ease_of_use, fill = type_eye_tracking)) +
+  geom_bar(stat="identity") +
+  xlab("Type of eye tracking") +
+  ylab("Total preceived ease of use") +
+  scale_fill_hue(name="Type of eye tracking")
+
+dataset %>% group_by(type_eye_tracking) %>% 
+  ggplot(aes(x = type_eye_tracking, y = total_intention_to_use, fill = type_eye_tracking)) +
+  geom_bar(stat="identity") +
+  xlab("Type of eye tracking") +
+  ylab("Total intention to use") +
+  scale_fill_hue(name="Type of eye tracking")
+
+# Quantitative variables on bar plot
+dataset %>% group_by(type_eye_tracking) %>% 
+  ggplot(aes(x = type_eye_tracking, y = total_time, fill = type_eye_tracking)) +
+  geom_bar(stat="identity") +
+  xlab("Type of eye tracking") +
+  ylab("Total time") +
+  scale_fill_hue(name="Type of eye tracking")
+
+dataset %>% group_by(type_eye_tracking) %>% 
+  ggplot(aes(x = type_eye_tracking, y = total_time_accuracy, fill = type_eye_tracking)) +
+  geom_bar(stat="identity") +
+  xlab("Type of eye tracking") +
+  ylab("Total time accuracy") +
+  scale_fill_hue(name="Type of eye tracking")
+
+dataset %>% group_by(type_eye_tracking) %>% 
+  ggplot(aes(x = type_eye_tracking, y = total_accuracy, fill = type_eye_tracking)) +
+  geom_bar(stat="identity") + # Total accuracy higher for GAZING?
+  xlab("Type of eye tracking") +
+  ylab("Total accuracy") +
+  scale_fill_hue(name="Type of eye tracking")
+
+dataset %>% group_by(type_eye_tracking) %>% 
+  ggplot(aes(x = type_eye_tracking, y = precision, fill = type_eye_tracking)) +
+  geom_bar(stat="identity") +
+  xlab("Type of eye tracking") +
+  ylab("Precision") +
+  scale_fill_hue(name="Type of eye tracking")
+```
+
+
+```{r}
+attach(dataset)
+table(type_eye_tracking)
+
+tab22 <-function(a,y){ table(a,y)
+  print(table(a,y))
+  options(digits=4)
+  print(prop.table(table(a,y),1)*100)
+  print(margin.table(table(a,y),1))
+  options(digits=7)
+}
+
+tab22(dataset$total_perceived_usefulness,type_eye_tracking)
+tab22(dataset$total_perceived_ease_of_use,type_eye_tracking)
+tab22(dataset$total_intention_to_use,type_eye_tracking)
+tab22(dataset$total_time,type_eye_tracking)
+tab22(dataset$total_time_accuracy,type_eye_tracking)
+tab22(dataset$total_accuracy,type_eye_tracking)
+tab22(dataset$precision,type_eye_tracking)
+
+# LOGISTIC REGRESSION MODEL
+FullcovModel = glm(type_eye_tracking ~ total_perceived_usefulness + total_intention_to_use+  total_perceived_ease_of_use + total_accuracy + precision, data = dataset,family=binomial(link=logit))
+
+contrasts(dataset$type_eye_tracking)
+
+FullcovModel_2 = glm(type_eye_tracking ~ distance + age + education + experience + total_perceived_usefulness + total_perceived_ease_of_use + total_intention_to_use, data = dataset,family=binomial(link=logit))
+
+summary(FullcovModel)
+
+anova(FullcovModel, test="Chisq")
+
+
+library(pscl)
+pR2(FullcovModel)
+```
+
+
+### Multinominal regressions
+
+```{r}
+mlr_base <- multinom(type_eye_tracking ~ distance + age + education + experience, data = dataset)
+summary(mlr_base)
+
+# z statistics
+z <- summary(mlr_base)$coefficients/summary(mlr_base)$standard.errors
+z
+
+# Two tailed z test
+p <- (1 - pnorm(abs(z), 0, 1)) * 2
+p
+```
+
+```{r}
+# Multinomial regression only on qualitative and rest
+dataset$type_eye_tracking <- relevel(dataset$type_eye_tracking, ref = "Blinking")
+
+mlr_1 <- multinom(type_eye_tracking ~ distance + age + education + experience + total_perceived_usefulness + total_perceived_ease_of_use + total_intention_to_use, data = dataset)
+summary(mlr_1)
+
+# z statistics
+z <- summary(mlr_1)$coefficients/summary(mlr_1)$standard.errors
+z
+
+# Two tailed z test
+p <- (1 - pnorm(abs(z), 0, 1)) * 2
+p
+```
+
+```{r}
+# Multinomial regression on qualitative and quantitative
+mlr_2 <- multinom(type_eye_tracking ~ distance + age + education + experience + total_perceived_usefulness + total_perceived_ease_of_use + total_intention_to_use + total_time + total_time_accuracy + total_accuracy + precision, data = dataset)
+summary(mlr_2)
+
+# z statistics
+z <- summary(mlr_2)$coefficients/summary(mlr_2)$standard.errors
+z
+# Two tailed z test
+p <- (1 - pnorm(abs(z), 0, 1)) * 2
+p
+```
+
+```{r}
+mlr_3 <- multinom(type_eye_tracking ~ + total_time + total_time_accuracy + total_accuracy + precision, data = dataset)
+summary(mlr_3)
+
+# z statistics
+z <- summary(mlr_3)$coefficients/summary(mlr_3)$standard.errors
+z
+# Two tailed z test
+p <- (1 - pnorm(abs(z), 0, 1)) * 2
+p
+```
+
+```{r}
+# Stackoverflow
+fit <- bayesglm(type_eye_tracking ~ distance + age + education + experience + total_perceived_usefulness + total_perceived_ease_of_use + total_intention_to_use + total_time + total_time_accuracy + total_accuracy + precision, data = dataset, family = "binomial")
+display(fit)
+
+logit <- glm(type_eye_tracking ~ distance + age + experience + total_perceived_usefulness + total_perceived_ease_of_use + total_intention_to_use + total_accuracy + precision, data = dataset, family = "binomial")
+summary(logit)
+confint(logit)
+```
+
+
+### Chi-square tests / Independence tests
+
+```{r}
+# Chi square test
+chisq.1 <- chisq.test(dataset$type_eye_tracking, dataset$total_perceived_usefulness, correct=FALSE)
+chisq.2 <- chisq.test(dataset$type_eye_tracking, dataset$total_perceived_ease_of_use, correct=FALSE)
+chisq.3 <- chisq.test(dataset$type_eye_tracking, dataset$total_intention_to_use, correct=FALSE)
+
+chisq.4 <- chisq.test(dataset$total_perceived_ease_of_use, dataset$total_intention_to_use, correct=FALSE)
+chisq.5 <- chisq.test(dataset$total_perceived_usefulness, dataset$total_perceived_ease_of_use, correct=FALSE) # LOW! Not independent - correlated?
+chisq.6 <- chisq.test(dataset$total_perceived_usefulness, dataset$total_intention_to_use, correct=FALSE)
+
+# Confirm with correlations
+cor(dataset$total_perceived_usefulness, dataset$total_intention_to_use) # this is very high! May be correlated - delete one of the two?
+```
+
